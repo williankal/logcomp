@@ -6,59 +6,53 @@ class Token:
         self.value = value
 
 class Tokenizer:
-    def __init__(self, source: str, position : int = 0):
+    def __init__(self, source: str):
         self.source = source
         self.position = 0
-        self.next = Token
-    
+        self.next = None
+
     def selectNext(self):
-        if self.position == len(self.source):
-            self.next = Token("EOF", " ")
+        while self.position < len(self.source):
+            current_char = self.source[self.position]
 
-        elif self.source[self.position] == " ":
-            self.position += 1
-            self.selectNext()
-            
-        elif self.source[self.position] == "+":
-            self.position += 1
-            self.next = Token("PLUS", self.source[self.position])
-            return self.next
+            if current_char.isnumeric():
+                num = current_char
+                self.position += 1
 
-        elif self.source[self.position] == "-":
-            self.position += 1
-            self.next = Token("MINUS",  self.source[self.position])
-            return self.next
-
-
-        elif self.source[self.position].isnumeric():
-            numero_completo = self.source[self.position]
-            self.position += 1
-
-            while self.position <= len(self.source):
-                
-                if self.source[self.position].isnumeric():
-                    numero_completo += self.source[self.position]
+                while self.position < len(self.source) and self.source[self.position].isnumeric():
+                    num += self.source[self.position]
                     self.position += 1
 
-                else :
-                    self.next = Token("NUM", int(numero_completo))
-                    return self.next
-                
-            self.next = Token("NUM", int(numero_completo))
-            return self.next
-        
-        
-        else:
-            raise Exception("aaa")
-        
-    
-        
+                self.next = Token("NUM", int(num))
+                return
+
+            elif current_char == "+" and self.next.type != "PLUS":
+                self.next = Token("PLUS", 0)
+                self.position += 1
+                return
+
+            elif current_char == "-" and self.next.type != "MINUS":
+                self.next = Token("MINUS", 0)
+                self.position += 1
+                return
+
+            elif current_char == " ":
+                self.position += 1
+                continue
+
+            else:
+                raise Exception("Invalid char")
+
+        self.next = Token("EOF", 0)            
+
+
 class Parser:
-    tokens: Tokenizer
+    tokens: None
 
     def parseExpression():
-        Parser.tokens.selectNext()
         resultado = 0
+        Parser.tokens.selectNext()
+
 
         while Parser.tokens.next.type != "EOF":
             if Parser.tokens.next.type == "NUM":
@@ -68,17 +62,30 @@ class Parser:
                 while Parser.tokens.next.type == "PLUS" or Parser.tokens.next.type == "MINUS":
                     if Parser.tokens.next.type == "PLUS":
                         Parser.tokens.selectNext()
+
                         if Parser.tokens.next.type == "NUM":
-                            resultado += Parser.tokens.next.value()
+                            resultado += Parser.tokens.next.value
+                        else:
+                            raise Exception("aaa")
 
                     elif Parser.tokens.next.type == "MINUS":
                         Parser.tokens.selectNext()
+
                         if Parser.tokens.next.type == "NUM":
-                            resultado -= Parser.tokens.next.value()
+                            resultado -= Parser.tokens.next.value
+                        else:
+                            raise Exception("aaa")
+                        
                     Parser.tokens.selectNext()
 
-        print(resultado)
-        return resultado    
+                print(resultado)
+                return resultado
+                    
+        else:
+            raise Exception("aaa")
+    
+
+    
 
     def run(code):
         Parser.tokens = Tokenizer(code)
