@@ -53,6 +53,8 @@ class Parser:
         resultado = 0
         Parser.tokens.selectNext()
 
+        if all(op not in Parser.tokens.source for op in ["-", "+"]) and len(Parser.tokens.source) > 1:
+            raise Exception("Invalid string")
 
         while Parser.tokens.next.type != "EOF":
             if Parser.tokens.next.type == "NUM":
@@ -76,8 +78,7 @@ class Parser:
                         else:
                             raise Exception("aaa")
                     
-                else:
-                    raise Exception("erro na string")
+
                         
                     Parser.tokens.selectNext()
 
