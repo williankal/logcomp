@@ -75,11 +75,16 @@ class Parser:
                             resultado -= Parser.tokens.next.value
                         else:
                             raise Exception("aaa")
+                    
+                else:
+                    raise Exception("erro na string")
                         
                     Parser.tokens.selectNext()
 
                 print(resultado)
                 return resultado
+
+
                     
         else:
             raise Exception("aaa")
