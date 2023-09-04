@@ -51,6 +51,7 @@ class Tokenizer:
             elif current_char == " ":
                 self.position += 1
                 continue
+            
 
         
 
@@ -63,10 +64,35 @@ class Tokenizer:
 class Parser:
     tokens: None
 
-
-
-            
+    def parserTerm():
         
+        if Parser.tokens.next.type != "NUM":
+            raise Exception("invalid char")
+
+        resultado = Parser.tokens.next.value
+        Parser.tokens.selectNext()   
+        while (Parser.tokens.next.type == "MULT" or Parser.tokens.next.type == "DIV") and Parser.tokens.next.type != "EOF":
+            if Parser.tokens.next.type == "DIV":
+                
+                Parser.tokens.selectNext()
+                if Parser.tokens.next.type == "NUM":
+                    resultado //= Parser.tokens.next.value
+                else:
+                    raise ValueError
+                
+            elif Parser.tokens.next.type == "MULT":
+                Parser.tokens.selectNext()
+                
+                if Parser.tokens.next.type == "NUM":
+                    resultado *= Parser.tokens.next.value
+                    
+                else: 
+                    raise ValueError
+                
+            Parser.tokens.selectNext()
+        return resultado
+                
+    
 
         
 
@@ -75,35 +101,26 @@ class Parser:
         Parser.tokens.selectNext()
         resultado = Parser.parserTerm()
 
-        if all(op not in Parser.tokens.source for op in ["-", "+"]) and len(Parser.tokens.source) > 1:
+        if all(op not in Parser.tokens.source for op in ["-", "+", "*", "/"]) and len(Parser.tokens.source) > 1:
             raise Exception("Invalid string")
 
         while Parser.tokens.next.type != "EOF":
-            if Parser.tokens.next.type == "NUM":
-                resultado = Parser.tokens.next.value
+
+
+            if Parser.tokens.next.type == "PLUS":
                 Parser.tokens.selectNext()
-
-                while Parser.tokens.next.type == "PLUS" or Parser.tokens.next.type == "MINUS":
-                    if Parser.tokens.next.type == "PLUS":
-                        Parser.tokens.selectNext()
-                        resultado = Parser.parserTerm()
+                resultado += Parser.parserTerm()
 
 
-                    elif Parser.tokens.next.type == "MINUS":
-                        Parser.tokens.selectNext()
-                        resultado = Parser.parserTerm()
-                    
+            elif Parser.tokens.next.type == "MINUS":
+                Parser.tokens.selectNext()
+                resultado -= Parser.parserTerm()
+            
+                
+            Parser.tokens.selectNext()
 
-                        
-                    Parser.tokens.selectNext()
-
-                print(resultado)
-                return resultado
-
-
-                    
-        else:
-            raise Exception("aaa")
+        print(resultado)
+        return resultado
         
 
     def filter(string):
