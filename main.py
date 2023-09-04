@@ -1,4 +1,5 @@
 import sys
+import re
 
 class Token:
     def __init__(self, type : str, value : int):
@@ -35,10 +36,23 @@ class Tokenizer:
                 self.next = Token("MINUS", 0)
                 self.position += 1
                 return
+            
+            elif current_char == "/" and self.next.type !="DIV":
+                self.next = Token("DIV", 0)
+                self.position += 1
+                return
+            
+            elif current_char == "*" and self.next.type !="MULT":
+                self.next = Token("MULT", 0)
+                self.position += 1
+                return
+            
 
             elif current_char == " ":
                 self.position += 1
                 continue
+
+        
 
             else:
                 raise Exception("Invalid char")
@@ -49,9 +63,17 @@ class Tokenizer:
 class Parser:
     tokens: None
 
+
+
+            
+        
+
+        
+
+    @staticmethod    
     def parseExpression():
-        resultado = 0
         Parser.tokens.selectNext()
+        resultado = Parser.parserTerm()
 
         if all(op not in Parser.tokens.source for op in ["-", "+"]) and len(Parser.tokens.source) > 1:
             raise Exception("Invalid string")
@@ -64,19 +86,12 @@ class Parser:
                 while Parser.tokens.next.type == "PLUS" or Parser.tokens.next.type == "MINUS":
                     if Parser.tokens.next.type == "PLUS":
                         Parser.tokens.selectNext()
+                        resultado = Parser.parserTerm()
 
-                        if Parser.tokens.next.type == "NUM":
-                            resultado += Parser.tokens.next.value
-                        else:
-                            raise Exception("aaa")
 
                     elif Parser.tokens.next.type == "MINUS":
                         Parser.tokens.selectNext()
-
-                        if Parser.tokens.next.type == "NUM":
-                            resultado -= Parser.tokens.next.value
-                        else:
-                            raise Exception("aaa")
+                        resultado = Parser.parserTerm()
                     
 
                         
@@ -89,12 +104,18 @@ class Parser:
                     
         else:
             raise Exception("aaa")
-    
+        
+
+    def filter(string):
+        return re.sub("/\*.*?\*/", "", string)
+
 
     
 
     def run(code):
-        Parser.tokens = Tokenizer(code)
+        code_filter = Parser.filter(code)
+        print(code_filter)
+        Parser.tokens = Tokenizer(code_filter)
         Parser.parseExpression()
 
 
