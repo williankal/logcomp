@@ -6,4 +6,4 @@
 
 
 
-![image](diagrama.svg)
+![image](diagram.drawio.png)
