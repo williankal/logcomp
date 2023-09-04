@@ -104,8 +104,7 @@ class Parser:
         if all(op not in Parser.tokens.source for op in ["-", "+", "*", "/"]) and len(Parser.tokens.source) > 1:
             raise Exception("Invalid string")
 
-        while Parser.tokens.next.type != "EOF" and (Parser.tokens.next.type == "PLUS" or Parser.tokens.next.type == "MINUS"):
-
+        while Parser.tokens.next.type != "EOF" :
 
             if Parser.tokens.next.type == "PLUS":
                 Parser.tokens.selectNext()
