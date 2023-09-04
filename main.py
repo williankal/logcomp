@@ -131,7 +131,6 @@ class Parser:
 
     def run(code):
         code_filter = Parser.filter(code)
-        print(code_filter)
         Parser.tokens = Tokenizer(code_filter)
         Parser.parseExpression()
 
