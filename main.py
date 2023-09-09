@@ -73,6 +73,8 @@ class Parser:
 
     @staticmethod    
     def parseFactor():
+       
+       resultado = 0
        if Parser.tokens.next.type == "NUM":
            resultado = Parser.tokens.next.value
            Parser.tokens.selectNext()
@@ -88,11 +90,13 @@ class Parser:
            resultado -= Parser.parseFactor()
       
        elif Parser.tokens.next.type == "OPEN_PAREN":
-           resultado = Parser.parseExpression()
-           if Parser.tokens.next.type != "CLOSE_PAREN":
-               raise Exception("Invalid string")
-          
-           Parser.tokens.selectNext()
+            resultado = Parser.parseExpression()
+            if Parser.tokens.next.type == "CLOSE_PAREN":
+                Parser.tokens.selectNext()
+
+            else:
+               raise ValueError("Invalid string")
+           
        else:
            raise ValueError("Invalid string")
       
@@ -104,7 +108,7 @@ class Parser:
 
         resultado = Parser.parseFactor()
 
-        while (Parser.tokens.next.type == "MULT" or Parser.tokens.next.type == "DIV") and Parser.tokens.next.type != "EOF":
+        while (Parser.tokens.next.type == "MULT" or Parser.tokens.next.type == "DIV") :
             if Parser.tokens.next.type == "DIV":
                 
                 Parser.tokens.selectNext()
@@ -127,7 +131,7 @@ class Parser:
         Parser.tokens.selectNext()
         resultado = Parser.parserTerm()
 
-        if all(op not in Parser.tokens.source for op in ["-", "+", "*", "/", ")", "("]) and len(Parser.tokens.source) > 1:
+        if all(op not in Parser.tokens.source for op in ["-", "+", "*", "/", ]) and len(Parser.tokens.source) > 1:
             raise Exception("Invalid string")
 
         while Parser.tokens.next.type != "EOF" and ((Parser.tokens.next.type == "PLUS" or Parser.tokens.next.type == "MINUS")) :
@@ -154,6 +158,9 @@ class Parser:
         code_filter = Parser.filter(code)
         Parser.tokens = Tokenizer(code_filter)
         resultado = Parser.parseExpression()
+        
+        if Parser.tokens.next.type != "EOF":
+            raise Exception("Invalid string")
         print(resultado)
 
 
