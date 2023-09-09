@@ -51,10 +51,17 @@ class Tokenizer:
             elif current_char == " ":
                 self.position += 1
                 continue
+
+            elif current_char == "(":
+                self.next = Token("OPEN_PAREN", 0)
+                self.position += 1
+                return
+
+            elif current_char == ")":
+                self.next = Token("CLOSE_PAREN", 0)
+                self.position += 1
+                return
             
-
-        
-
             else:
                 raise Exception("Invalid char")
 
@@ -64,32 +71,51 @@ class Tokenizer:
 class Parser:
     tokens: None
 
-    def parserTerm():
-        
-        if Parser.tokens.next.type != "NUM":
-            raise Exception("invalid char")
+    @staticmethod    
+    def parseFactor():
+       if Parser.tokens.next.type == "NUM":
+           resultado = Parser.tokens.next.value
+           Parser.tokens.selectNext()
 
-        resultado = Parser.tokens.next.value
-        Parser.tokens.selectNext()   
+
+       elif Parser.tokens.next.type == "PLUS":
+           Parser.tokens.selectNext()
+           resultado += Parser.parseFactor()
+
+
+       elif Parser.tokens.next.type == "MINUS":
+           Parser.tokens.selectNext()
+           resultado -= Parser.parseFactor()
+      
+       elif Parser.tokens.next.type == "OPEN_PAREN":
+           resultado = Parser.parseExpression()
+           if Parser.tokens.next.type != "CLOSE_PAREN":
+               raise Exception("Invalid string")
+          
+           Parser.tokens.selectNext()
+       else:
+           raise ValueError("Invalid string")
+      
+       return resultado
+    
+
+    @staticmethod    
+    def parserTerm():
+
+        resultado = Parser.parseFactor()
+
         while (Parser.tokens.next.type == "MULT" or Parser.tokens.next.type == "DIV") and Parser.tokens.next.type != "EOF":
             if Parser.tokens.next.type == "DIV":
                 
                 Parser.tokens.selectNext()
-                if Parser.tokens.next.type == "NUM":
-                    resultado //= Parser.tokens.next.value
-                else:
-                    raise ValueError
+                resultado //= Parser.parseFactor()
                 
             elif Parser.tokens.next.type == "MULT":
                 Parser.tokens.selectNext()
                 
-                if Parser.tokens.next.type == "NUM":
-                    resultado *= Parser.tokens.next.value
-                    
-                else: 
-                    raise ValueError
+                resultado *= Parser.parseFactor()
+
                 
-            Parser.tokens.selectNext()
         return resultado
                 
     
@@ -101,10 +127,10 @@ class Parser:
         Parser.tokens.selectNext()
         resultado = Parser.parserTerm()
 
-        if all(op not in Parser.tokens.source for op in ["-", "+", "*", "/"]) and len(Parser.tokens.source) > 1:
+        if all(op not in Parser.tokens.source for op in ["-", "+", "*", "/", ")", "("]) and len(Parser.tokens.source) > 1:
             raise Exception("Invalid string")
 
-        while Parser.tokens.next.type != "EOF" :
+        while Parser.tokens.next.type != "EOF" and ((Parser.tokens.next.type == "PLUS" or Parser.tokens.next.type == "MINUS")) :
 
             if Parser.tokens.next.type == "PLUS":
                 Parser.tokens.selectNext()
@@ -117,9 +143,6 @@ class Parser:
                 
             else: 
                 raise ValueError
-            
-                
-        print(resultado)
         return resultado
         
 
@@ -130,7 +153,8 @@ class Parser:
     def run(code):
         code_filter = Parser.filter(code)
         Parser.tokens = Tokenizer(code_filter)
-        Parser.parseExpression()
+        resultado = Parser.parseExpression()
+        print(resultado)
 
 
 Parser.run(sys.argv[1])
