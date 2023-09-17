@@ -13,7 +13,7 @@ class PrePro:
         self.pre_string = pre_string
           
     def filter(self):
-        self.pre_string = re.sub('(^|\n)//[^\n]*', "", self.pre_string)
+        self.pre_string = re.sub('//.*', "", self.pre_string)
         return self.pre_string.strip()
         
 class Node:
