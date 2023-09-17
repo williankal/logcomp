@@ -13,7 +13,8 @@ class PrePro:
         self.pre_string = pre_string
           
     def filter(self):
-        self.pre_string = re.sub("/\*.*?\*/", "", self.pre_string)
+        self.pre_string = re.sub('(^|\n)//[^\n]*', "", self.pre_string)
+        return self.pre_string.strip()
         
 class Node:
     def __init__(self, value, children):
@@ -22,7 +23,40 @@ class Node:
         
         def Evaluate():
             pass
+
+# BinOP, UnOp, intVal, NoOp precisa reescrever a fun'c~aso evaluate
+
+class BinOp(Node):
+    def Evaluate(self):
+        if self.value == "+":
+            return self.children[0].Evaluate() + self.children[1].Evaluate()
+        elif self.value == "-":
+            return self.children[0].Evaluate() - self.children[1].Evaluate()
+        elif self.value == "*":
+            return self.children[0].Evaluate() * self.children[1].Evaluate()
+        elif self.value == "/":
+            return self.children[0].Evaluate() // self.children[1].Evaluate()
         
+        else: 
+            raise ValueError("BinOP Value error")
+        
+class UnOp(Node):
+    def Evaluate(self):
+        if self.value == "+":
+            return self.children[0].Evaluate()
+        elif self.value == "-":
+            return -self.children[0].Evaluate()
+        else: 
+            raise ValueError("UnOP Value error")
+        
+class IntVal(Node):
+    def Evaluate(self):
+        return self.value
+
+class NoOp(Node):
+    def Evaluate(self):
+        pass
+    
 
 
 class Tokenizer:
@@ -32,59 +66,65 @@ class Tokenizer:
         self.next = None
 
     def selectNext(self):
-        while self.position < len(self.source):
-            current_char = self.source[self.position]
+        if self.position >= len(self.source):
+            self.next = Token("EOF", 0)
+            return
 
-            if current_char.isnumeric():
-                num = current_char
-                self.position += 1
+        if self.source[self.position].isnumeric():
+            num = self.source[self.position]
+            self.position += 1
 
-                while self.position < len(self.source) and self.source[self.position].isnumeric():
+            while self.position < len(self.source):
+                if self.source[self.position].isnumeric():
                     num += self.source[self.position]
                     self.position += 1
+                else: 
+                    self.next = Token("NUM", int(num))
+                    return self.next
 
-                self.next = Token("NUM", int(num))
-                return
 
-            elif current_char == "+" and self.next.type != "PLUS":
-                self.next = Token("PLUS", 0)
-                self.position += 1
-                return
+            self.next = Token("NUM", int(num))
+            return self.next
 
-            elif current_char == "-" and self.next.type != "MINUS":
-                self.next = Token("MINUS", 0)
-                self.position += 1
-                return
-            
-            elif current_char == "/" and self.next.type !="DIV":
-                self.next = Token("DIV", 0)
-                self.position += 1
-                return
-            
-            elif current_char == "*" and self.next.type !="MULT":
-                self.next = Token("MULT", 0)
-                self.position += 1
-                return
-            
+        elif self.source[self.position] == "+":
+            self.position += 1
+            self.next = Token("PLUS", "+")
+            return
 
-            elif current_char == " ":
-                self.position += 1
-                continue
+        elif self.source[self.position] == "-" :
+            self.next = Token("MINUS", "-")
+            self.position += 1
+            return
+        
+        elif self.source[self.position] == "/":
+            self.next = Token("DIV", "/")
+            self.position += 1
+            return
+        
+        elif self.source[self.position] == "*":
+            self.next = Token("MULT", "*")
+            self.position += 1
+            return
+        
 
-            elif current_char == "(":
-                self.next = Token("OPEN_PAREN", 0)
-                self.position += 1
-                return
+        elif self.source[self.position] == " ":
+            self.position += 1
+            self.selectNext()
 
-            elif current_char == ")":
-                self.next = Token("CLOSE_PAREN", 0)
-                self.position += 1
-                return
-            
-            else:
-                raise Exception("Invalid char")
+        elif self.source[self.position] == "(":
+            self.next = Token("OPEN_PAREN", 0)
+            self.position += 1
+            return
 
-        self.next = Token("EOF", 0)            
+        elif self.source[self.position] == ")":
+            self.next = Token("CLOSE_PAREN", 0)
+            self.position += 1
+            return
+    
+        
+        else:
+            raise Exception("Invalid char")
+
 
 
 class Parser:
@@ -93,23 +133,23 @@ class Parser:
     @staticmethod    
     def parseFactor():
        
-       resultado = 0
+       node = 0
        if Parser.tokens.next.type == "NUM":
-           resultado = Parser.tokens.next.value
+           node = IntVal(Parser.tokens.next.value, [])
            Parser.tokens.selectNext()
 
 
        elif Parser.tokens.next.type == "PLUS":
            Parser.tokens.selectNext()
-           resultado += Parser.parseFactor()
+           node = UnOp(" + ", [Parser.parseFactor()])
 
 
        elif Parser.tokens.next.type == "MINUS":
            Parser.tokens.selectNext()
-           resultado -= Parser.parseFactor()
+           node = UnOp(" - " , [Parser.parseFactor()])
       
        elif Parser.tokens.next.type == "OPEN_PAREN":
-            resultado = Parser.parseExpression()
+            node = Parser.parseExpression()
             if Parser.tokens.next.type == "CLOSE_PAREN":
                 Parser.tokens.selectNext()
 
@@ -119,27 +159,27 @@ class Parser:
        else:
            raise ValueError("Invalid string")
       
-       return resultado
+       return node
     
 
     @staticmethod    
     def parserTerm():
 
-        resultado = Parser.parseFactor()
+        node = Parser.parseFactor()
 
         while (Parser.tokens.next.type == "MULT" or Parser.tokens.next.type == "DIV") :
             if Parser.tokens.next.type == "DIV":
                 
                 Parser.tokens.selectNext()
-                resultado //= Parser.parseFactor()
-                
+                node = BinOp("/", [node, Parser.parseFactor()])
+
             elif Parser.tokens.next.type == "MULT":
                 Parser.tokens.selectNext()
                 
-                resultado *= Parser.parseFactor()
+                node = BinOp("*", [node, Parser.parseFactor()])
 
                 
-        return resultado
+        return node
                 
     
 
@@ -147,8 +187,9 @@ class Parser:
 
     @staticmethod    
     def parseExpression():
+        
         Parser.tokens.selectNext()
-        resultado = Parser.parserTerm()
+        node = Parser.parserTerm()
 
         if all(op not in Parser.tokens.source for op in ["-", "+", "*", "/", ]) and len(Parser.tokens.source) > 1:
             raise Exception("Invalid string")
@@ -157,16 +198,16 @@ class Parser:
 
             if Parser.tokens.next.type == "PLUS":
                 Parser.tokens.selectNext()
-                resultado += Parser.parserTerm()
+                node = BinOp("+", [node, Parser.parserTerm()])
 
 
             elif Parser.tokens.next.type == "MINUS":
                 Parser.tokens.selectNext()
-                resultado -= Parser.parserTerm()
+                rnode = BinOp("-", [node, Parser.parserTerm()])
                 
             else: 
                 raise ValueError
-        return resultado
+        return node
         
 
 
@@ -176,11 +217,11 @@ class Parser:
         f.close()
         code_filter = PrePro(code).filter()
         Parser.tokens = Tokenizer(code_filter)  
-        resultado = Parser.parseExpression()
+        node = Parser.parseExpression()
         
         if Parser.tokens.next.type != "EOF":
             raise Exception("Invalid string")
-        print(node.evaluate())
+        print(node.Evaluate())
 
 
 Parser.run(sys.argv[1])
