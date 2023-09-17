@@ -5,6 +5,25 @@ class Token:
     def __init__(self, type : str, value : int):
         self.type = type
         self.value = value
+        
+
+
+class PrePro:
+    def __init__(self, pre_string):
+        self.pre_string = pre_string
+          
+    def filter(self):
+        self.pre_string = re.sub("/\*.*?\*/", "", self.pre_string)
+        
+class Node:
+    def __init__(self, value, children):
+        self.value = value
+        self.children = children
+        
+        def Evaluate():
+            pass
+        
+
 
 class Tokenizer:
     def __init__(self, source: str):
@@ -150,18 +169,18 @@ class Parser:
         return resultado
         
 
-    def filter(string):
-        return re.sub("/\*.*?\*/", "", string)
 
-
-    def run(code):
-        code_filter = Parser.filter(code)
-        Parser.tokens = Tokenizer(code_filter)
+    def run(arquivo):
+        f = open(arquivo, "r")
+        code = f.read()
+        f.close()
+        code_filter = PrePro(code).filter()
+        Parser.tokens = Tokenizer(code_filter)  
         resultado = Parser.parseExpression()
         
         if Parser.tokens.next.type != "EOF":
             raise Exception("Invalid string")
-        print(resultado)
+        print(node.evaluate())
 
 
 Parser.run(sys.argv[1])
