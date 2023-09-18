@@ -5,8 +5,6 @@ class Token:
     def __init__(self, type : str, value : int):
         self.type = type
         self.value = value
-        
-
 
 class PrePro:
     def __init__(self, pre_string):
@@ -21,8 +19,8 @@ class Node:
         self.value = value
         self.children = children
         
-        def Evaluate():
-            pass
+    def Evaluate():
+        pass
 
 # BinOP, UnOp, intVal, NoOp precisa reescrever a fun'c~aso evaluate
 
@@ -57,8 +55,6 @@ class NoOp(Node):
     def Evaluate(self):
         pass
     
-
-
 class Tokenizer:
     def __init__(self, source: str):
         self.source = source
@@ -67,10 +63,10 @@ class Tokenizer:
 
     def selectNext(self):
         if self.position >= len(self.source):
-            self.next = Token("EOF", 0)
-            return
+            self.next = Token("EOF", " ")
+            return self.next
 
-        if self.source[self.position].isnumeric():
+        elif self.source[self.position].isnumeric():
             num = self.source[self.position]
             self.position += 1
 
@@ -81,30 +77,28 @@ class Tokenizer:
                 else: 
                     self.next = Token("NUM", int(num))
                     return self.next
-
-
             self.next = Token("NUM", int(num))
             return self.next
 
         elif self.source[self.position] == "+":
             self.position += 1
-            self.next = Token("PLUS", "+")
-            return
+            self.next = Token("PLUS", " ")
+            return self.next
 
         elif self.source[self.position] == "-" :
-            self.next = Token("MINUS", "-")
             self.position += 1
-            return
+            self.next = Token("MINUS", " ")
+            return self.next
         
         elif self.source[self.position] == "/":
-            self.next = Token("DIV", "/")
             self.position += 1
-            return
+            self.next = Token("DIV", "/")
+            return self.next
         
         elif self.source[self.position] == "*":
-            self.next = Token("MULT", "*")
             self.position += 1
-            return
+            self.next = Token("MULT", "*")
+            return self.next
         
 
         elif self.source[self.position] == " ":
@@ -112,14 +106,14 @@ class Tokenizer:
             self.selectNext()
 
         elif self.source[self.position] == "(":
-            self.next = Token("OPEN_PAREN", 0)
             self.position += 1
-            return
+            self.next = Token("OPEN_PAREN", " ")
+            return self.next
 
         elif self.source[self.position] == ")":
-            self.next = Token("CLOSE_PAREN", 0)
             self.position += 1
-            return
+            self.next = Token("CLOSE_PAREN", " ")
+            return self.next
     
         
         else:
@@ -130,10 +124,8 @@ class Tokenizer:
 class Parser:
     tokens: None
 
-    @staticmethod    
     def parseFactor():
        
-       node = 0
        if Parser.tokens.next.type == "NUM":
            node = IntVal(Parser.tokens.next.value, [])
            Parser.tokens.selectNext()
@@ -141,58 +133,49 @@ class Parser:
 
        elif Parser.tokens.next.type == "PLUS":
            Parser.tokens.selectNext()
-           node = UnOp(" + ", [Parser.parseFactor()])
+           node = UnOp("+", [Parser.parseFactor()])
 
 
        elif Parser.tokens.next.type == "MINUS":
            Parser.tokens.selectNext()
-           node = UnOp(" - " , [Parser.parseFactor()])
+           node = UnOp("-" , [Parser.parseFactor()])
       
        elif Parser.tokens.next.type == "OPEN_PAREN":
             node = Parser.parseExpression()
-            if Parser.tokens.next.type == "CLOSE_PAREN":
-                Parser.tokens.selectNext()
+            if Parser.tokens.next.type != "CLOSE_PAREN":
+               raise ValueError("Invalid string")
 
             else:
-               raise ValueError("Invalid string")
-           
+                Parser.tokens.selectNext()
        else:
            raise ValueError("Invalid string")
       
        return node
     
 
-    @staticmethod    
     def parserTerm():
 
         node = Parser.parseFactor()
 
         while (Parser.tokens.next.type == "MULT" or Parser.tokens.next.type == "DIV") :
+
             if Parser.tokens.next.type == "DIV":
-                
                 Parser.tokens.selectNext()
                 node = BinOp("/", [node, Parser.parseFactor()])
 
             elif Parser.tokens.next.type == "MULT":
                 Parser.tokens.selectNext()
-                
                 node = BinOp("*", [node, Parser.parseFactor()])
 
-                
         return node
                 
     
 
         
-
-    @staticmethod    
     def parseExpression():
         
         Parser.tokens.selectNext()
         node = Parser.parserTerm()
-
-        if all(op not in Parser.tokens.source for op in ["-", "+", "*", "/", ]) and len(Parser.tokens.source) > 1:
-            raise Exception("Invalid string")
 
         while Parser.tokens.next.type != "EOF" and ((Parser.tokens.next.type == "PLUS" or Parser.tokens.next.type == "MINUS")) :
 
@@ -203,7 +186,7 @@ class Parser:
 
             elif Parser.tokens.next.type == "MINUS":
                 Parser.tokens.selectNext()
-                rnode = BinOp("-", [node, Parser.parserTerm()])
+                node = BinOp("-", [node, Parser.parserTerm()])
                 
             else: 
                 raise ValueError
@@ -212,11 +195,11 @@ class Parser:
 
 
     def run(arquivo):
-        f = open(arquivo, "r")
-        code = f.read()
-        f.close()
-        code_filter = PrePro(code).filter()
-        Parser.tokens = Tokenizer(code_filter)  
+        expressao = open(arquivo, "r")
+        code = expressao.read()
+        expressao.close()
+        expressao_semcoment = PrePro(code).filter()
+        Parser.tokens = Tokenizer(expressao_semcoment)  
         node = Parser.parseExpression()
         
         if Parser.tokens.next.type != "EOF":
@@ -225,3 +208,7 @@ class Parser:
 
 
 Parser.run(sys.argv[1])
+
+
+##testando
+# 3+6/3   *  2 -+-  +  2*4/2 + 0/1 -((6+ ((4)))/(2)) // Teste // Teste 2
