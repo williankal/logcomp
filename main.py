@@ -46,9 +46,9 @@ class BinOp(Node):
             return self.children[0].Evaluate(table) < self.children[1].Evaluate(table)
         elif self.value == ">":    
             return self.children[0].Evaluate(table) > self.children[1].Evaluate(table)
-        elif self.value == "&&":
+        elif self.value == "AND":
             return self.children[0].Evaluate(table) and self.children[1].Evaluate(table)
-        elif self.value == "||":
+        elif self.value == "OR":
             return self.children[0].Evaluate(table) or self.children[1].Evaluate(table)
         elif self.value == "!=":
             return self.children[0].Evaluate(table) != self.children[1].Evaluate(table)
@@ -58,6 +58,7 @@ class BinOp(Node):
             return self.children[0].Evaluate(table) <= self.children[1].Evaluate(table)
         
         else: 
+            print(self.value)
             raise ValueError("BinOP Value error")
         
 class UnOp(Node):
