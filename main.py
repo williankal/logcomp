@@ -14,11 +14,11 @@ class PrePro:
         self.pre_string = pre_string
           
     def filter(self):
-        self.pre_string = re.sub('//.*', "", self.pre_string)
+        code = re.sub('//.*', "", self.pre_string)
         
-        lines = self.pre_string.split('\n')
-        self.pre_string = '\n'.join([line.lstrip('\t') for line in lines])
-        return self.pre_string  
+        lines = code.split('\n')
+        code = '\n'.join([line.lstrip('\t') for line in lines])
+        return code
     
 
 class Node:
@@ -282,6 +282,7 @@ class Tokenizer:
 
             else:
                 self.next = Token("IDENTIFIER", variable)
+            return self.next
         
 
         else:
@@ -363,14 +364,14 @@ class Parser:
         node = Parser.parseBooTerm()
         while (Parser.tokens.next.type == "OR"):
             Parser.tokens.selectNext()
-            node = BinOp("||", [node, Parser.parseBooTerm()])
+            node = BinOp("OR", [node, Parser.parseBooTerm()])
         return node
     
     def parseBooTerm():
         node = Parser.relationExpression()
         while (Parser.tokens.next.type == "AND"):
             Parser.tokens.selectNext()
-            node = BinOp("&&", [node, Parser.relationExpression()])
+            node = BinOp("AND", [node, Parser.relationExpression()])
         return node
     
     def relationExpression():
@@ -436,12 +437,6 @@ class Parser:
                 raise ValueError
         return node
     
-
-    def parseProgram():
-        children = []
-        while Parser.tokens.next.type != "EOF":
-            children.append(Parser.parseStatement())
-        return children
     
     def parseStatement():
         root = NoOp()
@@ -489,7 +484,7 @@ class Parser:
                             Parser.tokens.selectNext()
                             if Parser.tokens.next.type == "EQUAL":
                                 Parser.tokens.selectNext()
-                                raiz_inc = Assignment(children=[raiz_inc, Parser.parseExpression()])
+                                raiz_inc = Assignment(children=[raiz_inc, Parser.parserBoolExpression()])
                                 raiz_block = Parser.parseBlock()
                                 root = For("for", [root_init, raiz_cond, raiz_inc, raiz_block])
                             else:
@@ -508,7 +503,7 @@ class Parser:
             Parser.tokens.selectNext()
             if Parser.tokens.next.type == "EQUAL":
                 Parser.tokens.selectNext()
-                root = Assignment("EQUAL", [raiz_id, Parser.parserBoolExpression()])
+                root = Assignment(children=[raiz_id, Parser.parserBoolExpression()])
 
             else:
                 raise ValueError("Invalid string")
@@ -522,6 +517,7 @@ class Parser:
     def run(arquivo):
         expressao_semcoment = PrePro(arquivo).filter()
         table = SymbolTable()
+
         Parser.tokens = Tokenizer(expressao_semcoment)  
         Parser.tokens.selectNext()
 
