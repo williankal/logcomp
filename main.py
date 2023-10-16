@@ -513,6 +513,7 @@ class Parser:
             Parser.tokens.selectNext()
             return root
 
+        raise ValueError("Statement quebrou")
             
 
     def run(arquivo):
