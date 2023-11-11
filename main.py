@@ -112,6 +112,10 @@ class Assignment(Node):
         super().__init__(value, children)
 
     def Evaluate(self, table : SymbolTable):
+        variable = table.getter(self.children[0])
+        if self.children[1].Evaluate(table)!= variable["type"]:
+            raise ValueError("Invalid type")
+        
         table.setter(self.children[0], self.children[1].Evaluate(table))
 
 class Scanln(Node):
@@ -135,7 +139,7 @@ class If(Node):
     def Evaluate(self, table : SymbolTable):
         if self.children[0].Evaluate(table)[0]:
             self.children[1].Evaluate(table)
-        elif len(self.children) > 3:
+        elif len(self.children) >= 3:
             self.children[2].Evaluate(table)
             
 
@@ -355,7 +359,9 @@ class Tokenizer:
         elif self.source[self.position] == '"':
             self.position += 1
             string = ""
-            while self.position < len(self.source) and self.source[self.position] != '"':
+            while self.source[self.position] != '"':
+                if self.source[self.position] == "\n":
+                    raise ValueError("String sem quotes no final")
                 string += self.source[self.position]
                 self.position += 1
             self.position += 1
@@ -490,12 +496,12 @@ class Parser:
             Parser.tokens.selectNext()
             if Parser.tokens.next.type == "ENTER":
                 Parser.tokens.selectNext()
-                root = Parser.parseStatement()
+                node = Parser.parseStatement()
             else:
                 raise ValueError("sem enter")
             if Parser.tokens.next.type == "CLOSE_BRACES":
                 Parser.tokens.selectNext()
-                return root
+                return node
             else:
                 raise ValueError("sem chaves fechadas")
         else: 
