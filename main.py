@@ -32,70 +32,50 @@ class Node:
 
 class BinOp(Node):
     def Evaluate(self, table : SymbolTable):
-
-        children_1 = self.children[0].Evaluate(table)
-        children_2 = self.children[1].Evaluate(table)
+        if self.value == "+":
+            return self.children[0].Evaluate(table) + self.children[1].Evaluate(table)
+        elif self.value == "-":
+            return self.children[0].Evaluate(table) - self.children[1].Evaluate(table)
+        elif self.value == "*":
+            return self.children[0].Evaluate(table) * self.children[1].Evaluate(table)
+        elif self.value == "/":
+            return self.children[0].Evaluate(table) // self.children[1].Evaluate(table)
+        elif self.value == "==":
+            return self.children[0].Evaluate(table) == self.children[1].Evaluate(table)
+        elif self.value == "<":
+            return self.children[0].Evaluate(table) < self.children[1].Evaluate(table)
+        elif self.value == ">":    
+            return self.children[0].Evaluate(table) > self.children[1].Evaluate(table)
+        elif self.value == "AND":
+            return self.children[0].Evaluate(table) and self.children[1].Evaluate(table)
+        elif self.value == "OR":
+            return self.children[0].Evaluate(table) or self.children[1].Evaluate(table)
+        elif self.value == "!=":
+            return self.children[0].Evaluate(table) != self.children[1].Evaluate(table)
+        elif self.value == ">=":
+            return self.children[0].Evaluate(table) >= self.children[1].Evaluate(table)
+        elif self.value == "<=":
+            return self.children[0].Evaluate(table) <= self.children[1].Evaluate(table)
         
-        if children_1[1] == "STRING" and  children_2[1]== "STRING":
-            if self.value == "==":
-                return (children_1[0] == children_2[0], "INT")
-            elif self.value == "!=":
-                return (children_1[0] != children_2[0], "INT")
-            elif self.value == ">":
-                return (children_1[0] > children_2[0], "INT")
-            elif self.value == "<":
-                return (children_1[0] < children_2[0], "INT")
-            elif self.value == ">=":
-                return (children_1[0] >= children_2[0], "INT")
-            elif self.value == "<=":
-                return (children_1[0] <= children_2[0], "INT")
-            
-        elif children_1[1] == "INT" and  children_2[1]== "INT":
-            if self.value == "+":
-                return(children_1[0] + children_2[0], "INT")
-            elif self.value == "-":
-                return(children_1[0] - children_2[0], "INT")
-            elif self.value == "*":
-                return(children_1[0] * children_2[0], "INT")
-            elif self.value == "//":
-                return(children_1[0] // children_2[0], "INT")
-            elif self.value == "==":
-                return(children_1[0] == children_2[0], "INT")
-            elif self.value == "AND":
-                return(children_1[0] and children_2[0], "INT")
-            elif self.value == "OR":
-                return(children_1[0] or children_2[0], "INT")
-            elif self.value == "!=":
-                return(children_1[0] != children_2[0], "INT")
-            
-        elif self.value == ".":
-            return (str(children_1[0]) + str(children_2[0]), "STRING")
-            
         else: 
             print(self.value)
             raise ValueError("BinOP Value error")
         
 class UnOp(Node):
     def Evaluate(self, table : SymbolTable):
-    
-        children = self.children[0].Evaluate(table)
-
-        if children[1] == "STRING":
-            raise ValueError("string não pode ser usada em UnOp")
-
         if self.value == "+":
-            return (children[0], "INT")
+            return self.children[0].Evaluate(table)
         elif self.value == "-":
-            return (-children[0], "INT")
+            return -self.children[0].Evaluate(table)
         elif self.value == "!":
-            return (not children[0], "INT")
+            return not self.children[0].Evaluate(table)
         else: 
             raise ValueError("UnOP Value error")
         
         
 class IntVal(Node):
     def Evaluate(self,table : SymbolTable):
-        return (self.value, "INT")
+        return self.value
 
 class NoOp(Node):
     def __init__(self):
@@ -105,28 +85,24 @@ class NoOp(Node):
 
 class Identifier(Node):
   def Evaluate(self, table : SymbolTable):
-    return table.getter(self.value)["value"]
+    return table.getter(self.value)
 
 class Assignment(Node):
     def __init__(self, children, value=None):
         super().__init__(value, children)
 
     def Evaluate(self, table : SymbolTable):
-        variable = table.getter(self.children[0])
-        if self.children[1].Evaluate(table)!= variable["type"]:
-            raise ValueError("Invalid type")
-        
         table.setter(self.children[0], self.children[1].Evaluate(table))
 
 class Scanln(Node):
     def __init__(self, children = None, value=None):
         super().__init__(value, children)
     def Evaluate(self, table : SymbolTable):
-        return (int (input()), "INT")
+        return int(input())
     
 class Println(Node):
     def Evaluate(self, table : SymbolTable):
-        print(self.children[0].Evaluate(table)[0])
+        print(self.children[0].Evaluate(table))
 
 class For(Node):
     def Evaluate(self, table : SymbolTable):
@@ -137,31 +113,15 @@ class For(Node):
 
 class If(Node):
     def Evaluate(self, table : SymbolTable):
-        if self.children[0].Evaluate(table)[0]:
+        if self.children[0].Evaluate(table):
             self.children[1].Evaluate(table)
-        elif len(self.children) >= 3:
+        elif len(self.children) == 3:
             self.children[2].Evaluate(table)
-            
 
 class Block(Node):
   def Evaluate(self, table : SymbolTable):
     for child in self.children:
       child.Evaluate(table)
-
-
-
-class VarVal(Node):
-
-    def Evaluate(self, table : SymbolTable):
-        if len(self.children) == 2:
-            table.create(variable = self.children[0], value = self.children[1].Evaluate(table), type = self.value)
-        elif len(self.children) == 1:
-            table.create(variable = self.children[0], value = None, type = self.value)
-
-class StringVal(Node):
-    def Evaluate(self, table : SymbolTable):
-        return (self.value, "STRING")
-    
         
 
 # Parte de cima será o node.py
@@ -171,22 +131,19 @@ class Tokenizer:
         self.source = source
         self.position = 0
         self.next = None
-        self.reserved_words = {"Println" : "Println", "if" : "if", "else" : "else", "for" : "for", "Scanln" : "Scanln", "var" : "var", "int" : "INT", "string" : "STRING"}
+        self.reserved_words = {"Println" : "Println", "if" : "if", "else" : "else", "for" : "for", "Scanln" : "Scanln"}
 
     def selectNext(self):
 
-        #EOF case
+
         if self.position >= len(self.source):
             self.next = Token("EOF", " ")
             return self.next
         
-        # Skip spaces
         elif self.source[self.position] == " ":
             self.position += 1
             self.selectNext()
 
-
-        #INT case
         elif self.source[self.position].isnumeric():
             num = self.source[self.position]
             self.position += 1
@@ -196,56 +153,48 @@ class Tokenizer:
                     num += self.source[self.position]
                     self.position += 1
                 else: 
-                    self.next = Token("INT", int(num))
+                    self.next = Token("NUM", int(num))
                     return self.next
-            self.next = Token("INT", int(num))
+            self.next = Token("NUM", int(num))
             return self.next
         
-       #Semicolon case 
         elif self.source[self.position] == ";":
             self.position += 1
             self.next = Token("SEMICOLON", " ")
             return self.next
 
-        #Plus case
         elif self.source[self.position] == "+":
             self.position += 1
             self.next = Token("PLUS", " ")
             return self.next
 
-        #Minus case
         elif self.source[self.position] == "-" :
             self.position += 1
             self.next = Token("MINUS", " ")
             return self.next
         
-        #Div case
         elif self.source[self.position] == "/":
             self.position += 1
             self.next = Token("DIV", "/")
             return self.next
         
-        #Mult case
         elif self.source[self.position] == "*":
             self.position += 1
             self.next = Token("MULT", "*")
             return self.next
         
 
-        #Open Parenthesis case
+
         elif self.source[self.position] == "(":
             self.position += 1
             self.next = Token("OPEN_PAREN", " ")
             return self.next
-        
 
-        #Close Parenthesis case
         elif self.source[self.position] == ")":
             self.position += 1
             self.next = Token("CLOSE_PAREN", " ")
             return self.next
         
-        #Equal case
         elif self.source[self.position] == "=":
             self.position += 1
             if self.source[self.position] == "=":
@@ -256,49 +205,41 @@ class Tokenizer:
             self.next = Token("EQUAL", " ")
             return self.next
         
-        #Enter case
         elif self.source[self.position] == "\n":
             self.position += 1
             self.next = Token("ENTER", " ")
             return self.next
         
-        #Less case
         elif self.source[self.position] == "<":
             self.position += 1
             self.next = Token("LESS", " ")
             return self.next
         
-       #Greater case 
         elif self.source[self.position] == ">":
             self.position += 1
             self.next = Token("GREATER", " ")
             return self.next
         
-        #GreaterEqual case
         elif self.source[self.position] == ">=":
             self.position += 1
             self.next = Token("GREATER_EQUAL", " ")
             return self.next
         
-        #LessEqual case
         elif self.source[self.position] == "<=":
             self.position += 1
             self.next = Token("LESS_EQUAL", " ")
             return self.next
         
-        #NotEqual case
         elif self.source[self.position] == "!=":
             self.position += 1
             self.next = Token("NOT_EQUAL", " ")
             return self.next
-        
-        #Not case
+
         elif self.source[self.position] == "!":
             self.position += 1
             self.next = Token("NOT", " ")
             return self.next
         
-        #And case
         elif self.source[self.position] == "&":
             self.position += 1
             if self.source[self.position] == "&":
@@ -307,8 +248,7 @@ class Tokenizer:
                 return self.next
             else: 
                 raise ValueError("& not found")
-            
-        #Or case
+        
         elif self.source[self.position] == "|" :
             self.position += 1
             if self.source[self.position] == "|":
@@ -318,24 +258,16 @@ class Tokenizer:
             else:
                 raise ValueError("| not found")
             
-        #Open Brackets case   
         elif self.source[self.position] == "{":
             self.position += 1
             self.next = Token("OPEN_BRACES", " ")
             return self.next
         
-        #Close Brackets case
         elif self.source[self.position] == "}":
             self.position += 1
             self.next = Token("CLOSE_BRACES", " ")
             return self.next
         
-        elif self.source[self.position] == ".":
-            self.position += 1
-            self.next = Token(".", ".")
-            return self.next
-        
-
         elif self.source[self.position].isalpha() or self.source[self.position] == "_":
             # Initialize the variable with the current character
             variable = self.source[self.position]
@@ -347,31 +279,15 @@ class Tokenizer:
                 self.position += 1
 
             if variable in self.reserved_words:
-                if variable in ["int", "string"]:
-                    self.next = Token("type", variable)
-                else:
-                    self.next = Token(self.reserved_words[variable], None)
+                self.next = Token(self.reserved_words[variable], None)
 
             else:
                 self.next = Token("IDENTIFIER", variable)
             return self.next
         
-        elif self.source[self.position] == '"':
-            self.position += 1
-            string = ""
-            while self.source[self.position] != '"':
-                if self.source[self.position] == "\n":
-                    raise ValueError("String sem quotes no final")
-                string += self.source[self.position]
-                self.position += 1
-            self.position += 1
-            self.next = Token("STRING", string)
-            return self.next
-        
-        
+
         else:
             raise ValueError("Invalid string")
-        
 class Parser:
     tokens: None
 
@@ -382,13 +298,9 @@ class Parser:
         return children
 
     def parseFactor():
-       if Parser.tokens.next.type == "INT":
+       if Parser.tokens.next.type == "NUM":
            node = IntVal(Parser.tokens.next.value, [])
            Parser.tokens.selectNext()
-
-       elif Parser.tokens.next.type == "STRING":
-            node = StringVal(Parser.tokens.next.value, [])
-            Parser.tokens.selectNext()
 
        elif Parser.tokens.next.type == "PLUS":
            Parser.tokens.selectNext()
@@ -496,12 +408,12 @@ class Parser:
             Parser.tokens.selectNext()
             if Parser.tokens.next.type == "ENTER":
                 Parser.tokens.selectNext()
-                node = Parser.parseStatement()
+                root = Parser.parseStatement()
             else:
                 raise ValueError("sem enter")
             if Parser.tokens.next.type == "CLOSE_BRACES":
                 Parser.tokens.selectNext()
-                return node
+                return root
             else:
                 raise ValueError("sem chaves fechadas")
         else: 
@@ -511,7 +423,8 @@ class Parser:
     def parseExpression():
         node = Parser.parserTerm()
 
-        while Parser.tokens.next.type != "EOF" and ((Parser.tokens.next.type == "PLUS" or Parser.tokens.next.type == "MINUS" or Parser.tokens.next.type == ".")) :
+        while Parser.tokens.next.type != "EOF" and ((Parser.tokens.next.type == "PLUS" or Parser.tokens.next.type == "MINUS")) :
+
             if Parser.tokens.next.type == "PLUS":
                 Parser.tokens.selectNext()
                 node = BinOp("+", [node, Parser.parserTerm()])
@@ -521,16 +434,12 @@ class Parser:
                 Parser.tokens.selectNext()
                 node = BinOp("-", [node, Parser.parserTerm()])
                 
-            elif Parser.tokens.next.type == ".":
-                Parser.tokens.selectNext()
-                node = BinOp(".", [node, Parser.parserTerm()])
             else: 
                 raise ValueError
         return node
     
     
     def parseStatement():
-
         root = NoOp()
         if Parser.tokens.next.type == "Println":
             Parser.tokens.selectNext()
@@ -545,22 +454,6 @@ class Parser:
                 
             else:
                 raise ValueError("Invalid string")
-            
-        elif Parser.tokens.next.type == "var":
-            Parser.tokens.selectNext()
-            if Parser.tokens.next.type != "IDENTIFIER":
-                raise ValueError("Invalid var")
-            raiz_id = Parser.tokens.next.value
-            Parser.tokens.selectNext()
-            if Parser.tokens.next.type == "type":
-                raiz_type = Parser.tokens.next.value
-                Parser.tokens.selectNext()
-            if Parser.tokens.next.type == "EQUAL":
-                Parser.tokens.selectNext()
-                root = VarVal(raiz_type, [raiz_id, Parser.parserBoolExpression()])
-            else:
-                root = VarVal(raiz_type, [raiz_id])
-
             
         elif Parser.tokens.next.type == "if":
 
@@ -619,7 +512,6 @@ class Parser:
         if Parser.tokens.next.type in ["ENTER", "EOF"]:
             Parser.tokens.selectNext()
             return root
-        
 
         raise ValueError("Statement quebrou")
             
