@@ -9,7 +9,7 @@ class SymbolTable:
         return self.table[variable]
     
     def setter(self, variable, value):
-        self.table[variable] = value
+        self.table[variable]["value"] = value
 
 
     def create(self,variable, value, type):
