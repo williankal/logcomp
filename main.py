@@ -36,20 +36,14 @@ class BinOp(Node):
     def __init__(self, value, children):
         super().__init__(value, children)
     def Evaluate(self, table : SymbolTable):
-        
+    
         children_1 = self.children[0].Evaluate(table)
         children_2 = self.children[1].Evaluate(table)
-        print("children_1:" , self.children[0])
-        print(">...................")
-        print("children_1 eval:" , self.children[0].Evaluate(table))
 
+        if self.value == ".":
+            return (str(children_1[0]) + str(children_2[0]), "string")
 
-
-        if children_1[1] != children_2[1]:
-            raise ValueError("Type error")
-        
-        
-        if  children_1[1] == "string" and  children_2[1]== "string":
+        elif  children_1[1] == "string" and  children_2[1]== "string":
             if self.value == "==":
                 return (children_1[0] == children_2[0], "int")
             elif self.value == "!=":
@@ -57,20 +51,32 @@ class BinOp(Node):
             elif self.value == ">":
                 return (children_1[0] > children_2[0], "int")
             elif self.value == "<":
-                return (children_1[0] < children_2[0], "int")
+                return (int(children_1[0] < children_2[0]), "int")
             elif self.value == ">=":
                 return (children_1[0] >= children_2[0], "int")
             elif self.value == "<=":
                 return (children_1[0] <= children_2[0], "int")
             
-        elif children_1[1] == "int" and  children_1[1]== "int":
-            if self.value == "+":
+        elif children_1[1] == "int" and  children_2[1] == "int":
+            if self.value == "==":
+                return (children_1[0] == children_2[0], "int")
+            elif self.value == "!=":
+                return (children_1[0] != children_2[0], "int")
+            elif self.value == ">":
+                return (children_1[0] > children_2[0], "int")
+            elif self.value == "<":
+                return (int(children_1[0] < children_2[0]), "int")
+            elif self.value == ">=":
+                return (children_1[0] >= children_2[0], "int")
+            elif self.value == "<=":
+                return (children_1[0] <= children_2[0], "int")
+            elif self.value == "+":
                 return(children_1[0] + children_2[0], "int")
             elif self.value == "-":
                 return(children_1[0] - children_2[0], "int")
             elif self.value == "*":
                 return(children_1[0] * children_2[0], "int")
-            elif self.value == "//":
+            elif self.value == "/":
                 return(children_1[0] // children_2[0], "int")
             elif self.value == "==":
                 return(children_1[0] == children_2[0], "int")
@@ -81,9 +87,6 @@ class BinOp(Node):
             elif self.value == "!=":
                 return(children_1[0] != children_2[0], "int")
             
-        elif self.value == ".":
-            return (str(children_1[0]) + str(children_2[0]), "string")
-            
         else: 
             raise ValueError("BinOP Value error")
         
@@ -92,9 +95,9 @@ class UnOp(Node):
         if self.value == "+":
             return (self.children[0].Evaluate(table)[0], "int")
         elif self.value == "-":
-            return (-self.children[0].Evaluate(table), "int")
+            return (-self.children[0].Evaluate(table)[0], "int")
         elif self.value == "!":
-            return (not(self.children[0].Evaluate(table)), "int")
+            return (not(self.children[0].Evaluate(table))[0], "int")
         else: 
             raise ValueError("UnOP Value error")
         
@@ -159,7 +162,6 @@ class Println(Node):
         super().__init__(value, children)
 
     def Evaluate(self, table : SymbolTable):
-     
         print(self.children[0].Evaluate(table)[0])
 
 class For(Node):
@@ -379,7 +381,6 @@ class Tokenizer:
                 else:
                     self.next = Token("IDENTIFIER", variable)
 
-        
         else:
             raise ValueError("Invalid string")
         
@@ -597,7 +598,6 @@ class Parser:
             tipo_var = Parser.tokens.next.value
             Parser.tokens.selectNext()
 
-
             if Parser.tokens.next.type == "EQUAL":
                 Parser.tokens.selectNext()
                 root = VarDec(tipo_var, [raiz_var, Parser.parserBoolExpression()])
@@ -655,6 +655,7 @@ class Parser:
 
         for root in Parser.parseProgram():
             root.Evaluate(table)
+
 
 
 expressao = open(sys.argv[1], "r")
