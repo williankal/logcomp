@@ -45,31 +45,31 @@ class BinOp(Node):
 
         elif  children_1[1] == "string" and  children_2[1]== "string":
             if self.value == "==":
-                return (children_1[0] == children_2[0], "int")
+                return (int(children_1[0] == children_2[0]), "int")
             elif self.value == "!=":
-                return (children_1[0] != children_2[0], "int")
+                return (int(children_1[0] != children_2[0]), "int")
             elif self.value == ">":
-                return (children_1[0] > children_2[0], "int")
+                return (int(children_1[0] > children_2[0]), "int")
             elif self.value == "<":
                 return (int(children_1[0] < children_2[0]), "int")
             elif self.value == ">=":
-                return (children_1[0] >= children_2[0], "int")
+                return (int(children_1[0] >= children_2[0]), "int")
             elif self.value == "<=":
-                return (children_1[0] <= children_2[0], "int")
+                return (int(children_1[0] <= children_2[0]), "int")
             
         elif children_1[1] == "int" and  children_2[1] == "int":
             if self.value == "==":
-                return (children_1[0] == children_2[0], "int")
+                return (int(children_1[0] == children_2[0]), "int")
             elif self.value == "!=":
-                return (children_1[0] != children_2[0], "int")
+                return (int(children_1[0] != children_2[0]), "int")
             elif self.value == ">":
-                return (children_1[0] > children_2[0], "int")
+                return (int(children_1[0] > children_2[0]), "int")
             elif self.value == "<":
                 return (int(children_1[0] < children_2[0]), "int")
             elif self.value == ">=":
-                return (children_1[0] >= children_2[0], "int")
+                return (int(children_1[0] >= children_2[0]), "int")
             elif self.value == "<=":
-                return (children_1[0] <= children_2[0], "int")
+                return (int(children_1[0] <= children_2[0]), "int")
             elif self.value == "+":
                 return(children_1[0] + children_2[0], "int")
             elif self.value == "-":
@@ -79,13 +79,13 @@ class BinOp(Node):
             elif self.value == "/":
                 return(children_1[0] // children_2[0], "int")
             elif self.value == "==":
-                return(children_1[0] == children_2[0], "int")
+                return(int(children_1[0] == children_2[0]), "int")
             elif self.value == "AND":
-                return(children_1[0] and children_2[0], "int")
+                return(int(children_1[0] and children_2[0]), "int")
             elif self.value == "OR":
-                return(children_1[0] or children_2[0], "int")
+                return(int(children_1[0] or children_2[0]), "int")
             elif self.value == "!=":
-                return(children_1[0] != children_2[0], "int")
+                return(int(children_1[0] != children_2[0]), "int")
             
         else: 
             raise ValueError("BinOP Value error")
