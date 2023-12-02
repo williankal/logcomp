@@ -1,6 +1,7 @@
 import sys
 import re
 from SymbolTable import SymbolTable
+from ASM import *
 from abc import ABC, abstractmethod
 
 
@@ -27,7 +28,7 @@ class Node:
         self.children = children
         
     @abstractmethod
-    def Evaluate(self, table: SymbolTable):
+    def Evaluate(self, table: SymbolTable, assembly: Writer):
         pass
 
 
@@ -35,69 +36,112 @@ class Node:
 class BinOp(Node):
     def __init__(self, value, children):
         super().__init__(value, children)
-    def Evaluate(self, table : SymbolTable):
+    def Evaluate(self, table : SymbolTable,assembly: Writer):
     
         children_1 = self.children[0].Evaluate(table)
+        assembly.write(f"PUSH EBX")
+        
         children_2 = self.children[1].Evaluate(table)
+        assembly.write(f"POP EAX")
 
         if self.value == ".":
             return (str(children_1[0]) + str(children_2[0]), "string")
 
+        # elif  children_1[1] == "string" and  children_2[1]== "string":
+        #     if self.value == "==":
+        #         return (int(children_1[0] == children_2[0]), "int")
+        #     elif self.value == "!=":
+        #         return (int(children_1[0] != children_2[0]), "int")
+        #     elif self.value == ">":
+        #         return (int(children_1[0] > children_2[0]), "int")
+        #     elif self.value == "<":
+        #         return (int(children_1[0] < children_2[0]), "int")
+        #     elif self.value == ">=":
+        #         return (int(children_1[0] >= children_2[0]), "int")
+        #     elif self.value == "<=":
+        #         return (int(children_1[0] <= children_2[0]), "int")
+            
+        # elif children_1[1] == "int" and  children_2[1] == "int":
+        #     if self.value == "==":
+        #         return (int(children_1[0] == children_2[0]), "int")
+        #     elif self.value == "!=":
+        #         return (int(children_1[0] != children_2[0]), "int")
+        #     elif self.value == ">":
+        #         return (int(children_1[0] > children_2[0]), "int")
+        #     elif self.value == "<":
+        #         return (int(children_1[0] < children_2[0]), "int")
+        #     elif self.value == ">=":
+        #         return (int(children_1[0] >= children_2[0]), "int")
+        #     elif self.value == "<=":
+        #         return (int(children_1[0] <= children_2[0]), "int")
+        #     elif self.value == "+":
+        #         return(children_1[0] + children_2[0], "int")
+        #     elif self.value == "-":
+        #         return(children_1[0] - children_2[0], "int")
+        #     elif self.value == "*":
+        #         return(children_1[0] * children_2[0], "int")
+        #     elif self.value == "/":
+        #         return(children_1[0] // children_2[0], "int")
+        #     elif self.value == "==":
+        #         return(int(children_1[0] == children_2[0]), "int")
+        #     elif self.value == "AND":
+        #         return(int(children_1[0] and children_2[0]), "int")
+        #     elif self.value == "OR":
+        #         return(int(children_1[0] or children_2[0]), "int")
+        #     elif self.value == "!=":
+        #         return(int(children_1[0] != children_2[0]), "int")
+
+
         elif  children_1[1] == "string" and  children_2[1]== "string":
             if self.value == "==":
-                return (int(children_1[0] == children_2[0]), "int")
-            elif self.value == "!=":
-                return (int(children_1[0] != children_2[0]), "int")
+                assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
+                assembly.write(f"CALL binop_je\n")
+
             elif self.value == ">":
-                return (int(children_1[0] > children_2[0]), "int")
+                assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
+                assembly.write(f"CALL binop_jg\n")
             elif self.value == "<":
-                return (int(children_1[0] < children_2[0]), "int")
-            elif self.value == ">=":
-                return (int(children_1[0] >= children_2[0]), "int")
-            elif self.value == "<=":
-                return (int(children_1[0] <= children_2[0]), "int")
-            
+                assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
+                assembly.write(f"CALL binop_jl\n")
+
         elif children_1[1] == "int" and  children_2[1] == "int":
             if self.value == "==":
-                return (int(children_1[0] == children_2[0]), "int")
-            elif self.value == "!=":
-                return (int(children_1[0] != children_2[0]), "int")
+                assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
+                assembly.write(f"CALL binop_je\n")
+
             elif self.value == ">":
-                return (int(children_1[0] > children_2[0]), "int")
+                assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
+                assembly.write(f"CALL binop_jg\n")
             elif self.value == "<":
-                return (int(children_1[0] < children_2[0]), "int")
-            elif self.value == ">=":
-                return (int(children_1[0] >= children_2[0]), "int")
-            elif self.value == "<=":
-                return (int(children_1[0] <= children_2[0]), "int")
-            elif self.value == "+":
-                return(children_1[0] + children_2[0], "int")
+                assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
+                assembly.write(f"CALL binop_jl\n")
+
+            elif self.value == "+": 
+                assembly.write(f"ADD EAX, EBX\n")
+
             elif self.value == "-":
-                return(children_1[0] - children_2[0], "int")
+                assembly.write(f"SUB EAX, EBX\n")
+
             elif self.value == "*":
-                return(children_1[0] * children_2[0], "int")
+                assembly.write(f"IMUL EBX\n")
             elif self.value == "/":
-                return(children_1[0] // children_2[0], "int")
-            elif self.value == "==":
-                return(int(children_1[0] == children_2[0]), "int")
+                assembly.write(f"IDIV EBX\n")
             elif self.value == "AND":
-                return(int(children_1[0] and children_2[0]), "int")
+                assembly.write(f"AND EAX, EBX\n")
             elif self.value == "OR":
-                return(int(children_1[0] or children_2[0]), "int")
-            elif self.value == "!=":
-                return(int(children_1[0] != children_2[0]), "int")
+                assembly.write(f"OR EAX, EBX\n")
             
         else: 
             raise ValueError("BinOP Value error")
         
 class UnOp(Node):
-    def Evaluate(self, table : SymbolTable):
+    def Evaluate(self, table : SymbolTable,assembly: Writer):
         if self.value == "+":
-            return (self.children[0].Evaluate(table)[0], "int")
+            assembly.write(f"MOV EAX, EAX ; O UnOp executa a operacao correspondente\n")
         elif self.value == "-":
-            return (-self.children[0].Evaluate(table)[0], "int")
+            assembly.write(f"NEG EAX ; O UnOp executa a operacao correspondente\n")
         elif self.value == "!":
-            return (not(self.children[0].Evaluate(table))[0], "int")
+            assembly.write(f"NOT EAX ; O UnOp executa a operacao correspondente\n")
         else: 
             raise ValueError("UnOP Value error")
         
@@ -105,42 +149,45 @@ class UnOp(Node):
 class IntVal(Node):
     def __init__(self, value, children=[]):
         super().__init__(value, children)
-    def Evaluate(self,table : SymbolTable):
-        return (self.value, "int")
+    def Evaluate(self,table : SymbolTable, assembly: Writer):
+        assembly.write(f"MOV EAX, {self.value} ; O IntVal carrega o valor {self.value} em EAX\n")
     
 class String(Node):
     def __init__(self, value, children=None):
         super().__init__(value, children)
 
-    def Evaluate(self, table : SymbolTable):
+    def Evaluate(self, table : SymbolTable, assembly: Writer):
         return (self.value, "string")
     
 class VarDec(Node):
     def __init__(self, value, children):
         super().__init__(value, children)
-    def Evaluate(self, table : SymbolTable):
+    def Evaluate(self, table : SymbolTable, assembly: Writer):
+        assembly.write(f"PUSH DWORD 0\n")
         if len(self.children) == 2:
-            table.create(variable = self.children[0], value = self.children[1].Evaluate(table), type = self.value)
+            value = self.children[1].Evaluate(table, assembly)
+            table.create(variable = self.children[0], value = value, type = self.value, position = pteste)
+            assembly.write(f"MOV DWORD [EBP-{pteste}], EAX\n")
         elif len(self.children) == 1:
             table.create(variable = self.children[0], value = None, type = self.value)
 
 class NoOp(Node):
     def __init__(self):
         super().__init__(value=None, children=[]) 
-    def Evaluate(self,table : SymbolTable):
+    def Evaluate(self,table : SymbolTable, assembly: Writer):
         pass
 
 class Identifier(Node):
   def __init__(self, value):
         super().__init__(value, children=None)
-  def Evaluate(self, table : SymbolTable):
+  def Evaluate(self, table : SymbolTable, assembly: Writer):
     return table.getter(self.value)["value"]
 
 class Assignment(Node):
     def __init__(self, children, value=None):
         super().__init__(value, children)
 
-    def Evaluate(self, table : SymbolTable):
+    def Evaluate(self, table : SymbolTable, assembly: Writer):
         value = self.children[1].Evaluate(table)
         variable = table.getter(self.children[0])
 
@@ -152,7 +199,7 @@ class Assignment(Node):
 class Scanln(Node):
     def __init__(self, children = None, value=None):
         super().__init__(value, children)
-    def Evaluate(self, table : SymbolTable):
+    def Evaluate(self, table : SymbolTable, assembly: Writer):
         return (int(input()), "int")
     
 
@@ -161,14 +208,14 @@ class Println(Node):
     def __init__(self, children, value = None):
         super().__init__(value, children)
 
-    def Evaluate(self, table : SymbolTable):
+    def Evaluate(self, table : SymbolTable, assembly: Writer):
         print(self.children[0].Evaluate(table)[0])
 
 class For(Node):
     def __init__(self, children, value=None):
         super().__init__(value, children)
 
-    def Evaluate(self, table : SymbolTable):
+    def Evaluate(self, table : SymbolTable, assembly: Writer):
         self.children[0].Evaluate(table)
         while self.children[1].Evaluate(table)[0]:
             self.children[3].Evaluate(table)
@@ -178,7 +225,7 @@ class If(Node):
     def __init__(self, children, value=None):
         super().__init__(value, children)
         
-    def Evaluate(self, table : SymbolTable):
+    def Evaluate(self, table : SymbolTable, assembly: Writer):
         if self.children[0].Evaluate(table):
             self.children[1].Evaluate(table)
         elif len(self.children) > 2:
@@ -187,7 +234,7 @@ class If(Node):
 class Block(Node):
   def __init__(self, children, value=None):
         super().__init__(value, children)
-  def Evaluate(self, table : SymbolTable):
+  def Evaluate(self, table : SymbolTable, assembly: Writer):
     for child in self.children:
       child.Evaluate(table)
         

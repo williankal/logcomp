@@ -12,7 +12,7 @@ class SymbolTable:
         self.table[variable]["value"] = value
 
 
-    def create(self,variable, value, type):
+    def create(self,variable, value, type, position):
         if variable in self.table:
             raise ValueError("variable already declared")
-        self.table[variable] = {"value": value, "type": type}
+        self.table[variable] = {"value": value, "type": type, position: position}
