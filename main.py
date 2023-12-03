@@ -38,11 +38,11 @@ class BinOp(Node):
         super().__init__(value, children)
     def Evaluate(self, table : SymbolTable,assembly: Writer):
     
-        children_1 = self.children[0].Evaluate(table)
-        assembly.write(f"PUSH EBX")
+        children_1 = self.children[1].Evaluate(table, assembly)
+        assembly.write(f"PUSH EAX ; O BinOp recupera o valor da pilha em EAX\n")
         
-        children_2 = self.children[1].Evaluate(table)
-        assembly.write(f"POP EAX")
+        children_2 = self.children[0].Evaluate(table, assembly)
+        assembly.write(f"POP EBX; O BinOp guarda o resultado na pilha\n")
 
         if self.value == ".":
             return (str(children_1[0]) + str(children_2[0]), "string")
@@ -91,45 +91,31 @@ class BinOp(Node):
         #     elif self.value == "!=":
         #         return(int(children_1[0] != children_2[0]), "int")
 
+        if self.value == "==":
+            assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
+            assembly.write(f"CALL binop_je\n")
 
-        elif  children_1[1] == "string" and  children_2[1]== "string":
-            if self.value == "==":
-                assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
-                assembly.write(f"CALL binop_je\n")
+        elif self.value == ">":
+            assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
+            assembly.write(f"CALL binop_jg\n")
+        elif self.value == "<":
+            assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
+            assembly.write(f"CALL binop_jl\n")
 
-            elif self.value == ">":
-                assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
-                assembly.write(f"CALL binop_jg\n")
-            elif self.value == "<":
-                assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
-                assembly.write(f"CALL binop_jl\n")
+        elif self.value == "+": 
+            assembly.write(f"ADD EAX, EBX\n")
 
-        elif children_1[1] == "int" and  children_2[1] == "int":
-            if self.value == "==":
-                assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
-                assembly.write(f"CALL binop_je\n")
+        elif self.value == "-":
+            assembly.write(f"SUB EAX, EBX\n")
 
-            elif self.value == ">":
-                assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
-                assembly.write(f"CALL binop_jg\n")
-            elif self.value == "<":
-                assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
-                assembly.write(f"CALL binop_jl\n")
-
-            elif self.value == "+": 
-                assembly.write(f"ADD EAX, EBX\n")
-
-            elif self.value == "-":
-                assembly.write(f"SUB EAX, EBX\n")
-
-            elif self.value == "*":
-                assembly.write(f"IMUL EBX\n")
-            elif self.value == "/":
-                assembly.write(f"IDIV EBX\n")
-            elif self.value == "AND":
-                assembly.write(f"AND EAX, EBX\n")
-            elif self.value == "OR":
-                assembly.write(f"OR EAX, EBX\n")
+        elif self.value == "*":
+            assembly.write(f"IMUL EBX\n")
+        elif self.value == "/":
+            assembly.write(f"IDIV EBX\n")
+        elif self.value == "AND":
+            assembly.write(f"AND EAX, EBX\n")
+        elif self.value == "OR":
+            assembly.write(f"OR EAX, EBX\n")
             
         else: 
             raise ValueError("BinOP Value error")
@@ -164,43 +150,49 @@ class VarDec(Node):
         super().__init__(value, children)
     def Evaluate(self, table : SymbolTable, assembly: Writer):
         assembly.write(f"PUSH DWORD 0\n")
+        pteste = (len(table.table)+1)*4
         if len(self.children) == 2:
             value = self.children[1].Evaluate(table, assembly)
             table.create(variable = self.children[0], value = value, type = self.value, position = pteste)
-            assembly.write(f"MOV DWORD [EBP-{pteste}], EAX\n")
+            assembly.write(f"MOV DWORD [EBP-{pteste}], EAX ;")
         elif len(self.children) == 1:
-            table.create(variable = self.children[0], value = None, type = self.value)
+            table.create(variable = self.children[0], value = None, type = self.value, position = pteste)
 
 class NoOp(Node):
     def __init__(self):
         super().__init__(value=None, children=[]) 
     def Evaluate(self,table : SymbolTable, assembly: Writer):
-        pass
-
+        return(None,None)
+    
 class Identifier(Node):
-  def __init__(self, value):
+    def __init__(self, value):
         super().__init__(value, children=None)
-  def Evaluate(self, table : SymbolTable, assembly: Writer):
-    return table.getter(self.value)["value"]
+
+    def Evaluate(self, table : SymbolTable, assembly: Writer):
+        value = table.getter(self.value)["value"]
+        position = table.getter(self.value)["position"]
+        assembly.write(f"MOV EAX, [EBP-{position}] ; Evaluate do Iden {value}")
+        return value
+
 
 class Assignment(Node):
     def __init__(self, children, value=None):
         super().__init__(value, children)
 
     def Evaluate(self, table : SymbolTable, assembly: Writer):
-        value = self.children[1].Evaluate(table)
         variable = table.getter(self.children[0])
-
-        if  value[1] != variable["type"]:
-            raise ValueError("Type variable incorrect")
-        
-        table.setter(self.children[0], value)
+        self.children[1].Evaluate(table, assembly)
+        assembly.write(f"MOV [EBP-{variable['position']}], EAX ;")
         
 class Scanln(Node):
     def __init__(self, children = None, value=None):
         super().__init__(value, children)
     def Evaluate(self, table : SymbolTable, assembly: Writer):
-        return (int(input()), "int")
+        assembly.write(f"PUSH scanint ;")
+        assembly.write(f"PUSH formatin ;")
+        assembly.write(f"CALL scanf ;")
+        assembly.write(f"ADD ESP, 8 ;")
+        assembly.write(f"MOV EAX, DWORD [scanint] ;")
     
 
 class Println(Node):
@@ -209,34 +201,54 @@ class Println(Node):
         super().__init__(value, children)
 
     def Evaluate(self, table : SymbolTable, assembly: Writer):
-        print(self.children[0].Evaluate(table)[0])
+        self.children[0].Evaluate(table, assembly)
+        assembly.write(f"PUSH EAX ;")
+        assembly.write(f"PUSH formatout ;")
+        assembly.write(f"CALL printf ;")
+        assembly.write(f"ADD ESP, 8 ;")
 
 class For(Node):
     def __init__(self, children, value=None):
         super().__init__(value, children)
 
     def Evaluate(self, table : SymbolTable, assembly: Writer):
-        self.children[0].Evaluate(table)
-        while self.children[1].Evaluate(table)[0]:
-            self.children[3].Evaluate(table)
-            self.children[2].Evaluate(table)
+        id = assembly.get_unique_id
+        assembly.write(f"LOOP_I{id}: ;")
+        self.children[1].Evaluate(table, assembly)
+        assembly.write(f"CMP EAX, False ;")
+        assembly.write(f"JE EXIT_{id} ;")
+        self.children[2].Evaluate(table, assembly)
+        self.children[3].Evaluate(table, assembly)
+        assembly.write(f"JMP LOOP_I{id} ;")
+        assembly.write(f"EXIT_{id}: ;")
+
 
 class If(Node):
     def __init__(self, children, value=None):
         super().__init__(value, children)
         
     def Evaluate(self, table : SymbolTable, assembly: Writer):
-        if self.children[0].Evaluate(table):
-            self.children[1].Evaluate(table)
-        elif len(self.children) > 2:
-            self.children[2].Evaluate(table)
+        id = assembly.get_unique_id
+        self.children[0].Evaluate(table, assembly) 
+        assembly.write(f"CMP EAX, False ;")
+        assembly.write(f"JE EXIST_{id} ;")
+        self.children[1].Evaluate(table, assembly)
+        assembly.write(f"JMP EXIT_{id} ;")
+        assembly.write(f"ELSE_{id}: ;")
+        if len(self.children) > 2:
+            self.children[2].Evaluate(table, assembly)
+        assembly.write(f"EXIT_{id}: ;")
+
+
+
+
 
 class Block(Node):
   def __init__(self, children, value=None):
         super().__init__(value, children)
   def Evaluate(self, table : SymbolTable, assembly: Writer):
     for child in self.children:
-      child.Evaluate(table)
+      child.Evaluate(table, assembly)
         
 
 # Parte de cima será o node.py
@@ -560,14 +572,17 @@ class Parser:
             Parser.tokens.selectNext()
             if Parser.tokens.next.type == "ENTER":
                 Parser.tokens.selectNext()
-                root = Parser.parseStatement()
             else:
                 raise ValueError("sem enter")
-            if Parser.tokens.next.type == "CLOSE_BRACES":
+            children_list = []  
+            while Parser.tokens.next.type != "CLOSE_BRACES" and Parser.tokens.next.type != "EOF":
+                children_list.append(Parser.parseStatement())
+            if Parser.tokens.next.type != "EOF":
                 Parser.tokens.selectNext()
-                return root
+                return Block(children = children_list)
             else:
-                raise ValueError("sem chaves fechadas")
+                raise ValueError("sem enter")
+
         else: 
             raise ValueError("sem chaves abertas")
 
@@ -693,7 +708,7 @@ class Parser:
         raise ValueError("Statement quebrou")
             
 
-    def run(arquivo):
+    def run(arquivo, assembly):
         expressao_semcoment = PrePro(arquivo).filter()
         table = SymbolTable()
 
@@ -701,13 +716,15 @@ class Parser:
         Parser.tokens.selectNext()
 
         for root in Parser.parseProgram():
-            root.Evaluate(table)
+            root.Evaluate(table, assembly)
 
 
 
-expressao = open(sys.argv[1], "r")
-code = expressao.read()
+arquivo = sys.argv[1]
+arquivo_nome = arquivo.replace(".go", "")   
+assembly = Writer(f"{arquivo_nome}.asm")
+with open(arquivo, "r") as expressao:
+    code = expressao.read()
+teste = Parser.run(code, assembly)
 expressao.close()
-teste = Parser.run(code)
-
 

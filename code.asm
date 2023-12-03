@@ -1,4 +1,4 @@
-Init = """; constantes
+; constantes
 SYS_EXIT equ 1
 SYS_READ equ 3
 SYS_WRITE equ 4
@@ -53,38 +53,4 @@ main:
     MOV EBP, ESP ; estabelece um novo base pointer
 
     ; codigo gerado pelo compilador
-"""
 
-last = """
-    ; depois que terminar de gerar o código:
-    PUSH DWORD [stdout]
-    CALL fflush
-    ADD ESP, 4
-    MOV ESP, EBP
-    POP EBP
-    MOV EAX, 1
-    XOR EBX, EBX
-    INT 0x80
-"""
-
-class Writer:
-    
-    def __init__(self, filename="program.asm"):
-        self.arquivo = filename
-        self.id = 0
-        self.write_initialization()
-        
-    def write_initialization(self):
-        with open(self.arquivo, "w") as arquivo:
-            arquivo.write(Init + '\n')
-
-    def write(self, content):
-        with open(self.arquivo, "a") as arquivo:
-            arquivo.write("    " + content + '\n')
-    
-    def close(self):
-        self.write_line(last)
-        
-    def get_unique_id(self):
-        self.id += 1
-        return self.id

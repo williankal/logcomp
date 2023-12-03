@@ -15,4 +15,4 @@ class SymbolTable:
     def create(self,variable, value, type, position):
         if variable in self.table:
             raise ValueError("variable already declared")
-        self.table[variable] = {"value": value, "type": type, position: position}
+        self.table[variable] = {"value": value, "type": type, "position": position}
