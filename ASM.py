@@ -82,9 +82,9 @@ class Writer:
         with open(self.arquivo, "a") as arquivo:
             arquivo.write("    " + content + '\n')
     
-    def close(self):
-        self.write_line(last)
+    def close_p(self):
+        self.write(last)
         
     def get_unique_id(self):
         self.id += 1
-        return self.id
+

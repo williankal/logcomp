@@ -212,15 +212,16 @@ class For(Node):
         super().__init__(value, children)
 
     def Evaluate(self, table : SymbolTable, assembly: Writer):
-        id = assembly.get_unique_id
-        assembly.write(f"LOOP_I{id}: ;")
+        
+        assembly.write(f"LOOP_{assembly.id}: ;")
         self.children[1].Evaluate(table, assembly)
         assembly.write(f"CMP EAX, False ;")
-        assembly.write(f"JE EXIT_{id} ;")
+        assembly.write(f"JE EXIT_{assembly.id} ;")
         self.children[2].Evaluate(table, assembly)
         self.children[3].Evaluate(table, assembly)
-        assembly.write(f"JMP LOOP_I{id} ;")
-        assembly.write(f"EXIT_{id}: ;")
+        assembly.write(f"JMP LOOP_{assembly.id} ;")
+        assembly.write(f"EXIT_{assembly.id}: ;")
+        assembly.get_unique_id()
 
 
 class If(Node):
@@ -228,19 +229,14 @@ class If(Node):
         super().__init__(value, children)
         
     def Evaluate(self, table : SymbolTable, assembly: Writer):
-        id = assembly.get_unique_id
         self.children[0].Evaluate(table, assembly) 
         assembly.write(f"CMP EAX, False ;")
-        assembly.write(f"JE EXIST_{id} ;")
+        assembly.write(f"JE EXIT_{assembly.id} ;")
         self.children[1].Evaluate(table, assembly)
-        assembly.write(f"JMP EXIT_{id} ;")
-        assembly.write(f"ELSE_{id}: ;")
-        if len(self.children) > 2:
+        assembly.write(f"EXIT_{assembly.id}: \n")
+        assembly.get_unique_id()
+        if len(self.children) >2:
             self.children[2].Evaluate(table, assembly)
-        assembly.write(f"EXIT_{id}: ;")
-
-
-
 
 
 class Block(Node):
@@ -250,7 +246,6 @@ class Block(Node):
     for child in self.children:
       child.Evaluate(table, assembly)
         
-
 # Parte de cima será o node.py
     
 class Tokenizer:
@@ -725,6 +720,6 @@ arquivo_nome = arquivo.replace(".go", "")
 assembly = Writer(f"{arquivo_nome}.asm")
 with open(arquivo, "r") as expressao:
     code = expressao.read()
-teste = Parser.run(code, assembly)
-expressao.close()
+Parser.run(code, assembly)  
+assembly.close_p()
 
