@@ -189,17 +189,59 @@ class Block(Node):
         super().__init__(value, children)
   def Evaluate(self, table : SymbolTable):
     for child in self.children:
-      child.Evaluate(table)
-        
-
+        if type(child) == ReturnNode:
+            return child.Evaluate(table)
+        child.Evaluate(table)
+    return (None, None)
 # Parte de cima será o node.py
+
+class FuncCall(Node):
+    def __init__(self, name, children):
+        super().__init__(value =name, children=children)
+
+    def Evaluate(self, table : SymbolTable):
+        node = FuncTable.get(name=self.value)["node"]
+        type = FuncTable.get(name=self.value)["type"]
+
+
+class ReturnNode(Node):
+    def __init__(self, children):
+        super().__init__(value=None, children=children)
+
+    def Evaluate(self, table : SymbolTable):
+        return self.children.Evaluate(table)
+    
+
+class FuncTable:
+    table = {}
+
+    def create(name, node, type):
+        if name in FuncTable.table:
+            raise ValueError("Function already exists")
+        FuncTable.table[name] = {"node": node, "type": type}
+    
+    def get(name):
+        if name not in FuncTable.table:
+            raise ValueError("Function not found")
+        return FuncTable.table[name]
+
+class FuncDec(Node):
+    def __init__(self,children):
+        super().__init__(value = None, children = children)
+
+    def Evaluate(self, table : SymbolTable):
+        name_ = self.children[0].children[0]
+        node_ = self
+        type_ = self.children[0].value
+        FuncTable.create(name=name_, node=node_, type=type_)
+
     
 class Tokenizer:
     def __init__(self, source: str):
         self.source = source
         self.position = 0
         self.next = None
-        self.reserved_words = {"Println" : "Println", "if" : "if", "else" : "else", "for" : "for", "Scanln" : "Scanln", "var" : "var", "int" : "int", "string" : "string"}
+        self.reserved_words = {"Println" : "Println", "if" : "if", "else" : "else", "for" : "for", "Scanln" : "Scanln", "var" : "var", "int" : "int", "string" : "string", "func": "func", "return": "return"}
 
     def selectNext(self):
 
@@ -267,6 +309,11 @@ class Tokenizer:
         elif self.source[self.position] == "*":
             self.position += 1
             self.next = Token("MULT", "*")
+            return self.next
+        
+        elif self.source[self.position] == ",":
+            self.position += 1
+            self.next = Token("COMMA", ",")
             return self.next
         
 
@@ -390,8 +437,64 @@ class Parser:
     def parseProgram():
         children = []
         while Parser.tokens.next.type != "EOF":
-            children.append(Parser.parseStatement())
+            if Parser.tokens.next.type == "ENTER":
+                Parser.tokens.selectNext()
+            else:
+                children.append(Parser.parseDeclaration())
+        
+        children.append(FuncCall(name="main", children=[]))
         return children
+    
+    def parseDeclaration():
+        args = []
+
+        if Parser.tokens.next.type != "func":
+            raise ValueError("Invalid func")
+        
+        Parser.tokens.selectNext()
+        if Parser.tokens.next.type != "IDENTIFIER":
+            raise ValueError("Invalid id after func")
+        func_id = Parser.tokens.next.value
+        Parser.tokens.selectNext()
+        if Parser.tokens.next.type != "OPEN_PAREN":
+            raise ValueError("Invalid format func")
+        
+        Parser.tokens.selectNext()
+        while Parser.tokens.next.type != "CLOSE_PAREN":
+            if Parser.tokens.next.type == "IDENTIFIER":
+                arg_id = Parser.tokens.next.value
+                Parser.tokens.selectNext()
+
+                if Parser.tokens.next.type != "type":
+                    raise ValueError("Invalid type func")
+                arg_type = Parser.tokens.next.value
+                args.append(VarDec(value = arg_type, children=[arg_id]))
+                Parser.tokens.selectNext()
+
+            elif Parser.tokens.next.type == "COMMA":
+                Parser.tokens.selectNext()
+                if Parser.tokens.next.type == "CLOSE_PAREN":
+                    raise ValueError("Invalid format func")
+                
+            else:
+                raise ValueError("Invalid format func")
+            
+
+        Parser.tokens.selectNext()
+        if Parser.tokens.next.type != "type":
+            raise ValueError("Invalid type func")
+        func_type = Parser.tokens.next.value  
+        func_node = [VarDec(value = func_type, children=[func_id])]
+        Parser.tokens.selectNext()
+        node = FuncDec(children=func_node + args + [Parser.parseBlock()])
+
+        if Parser.tokens.next.type != "ENTER":
+            raise ValueError("Invalid func")
+        Parser.tokens.selectNext()
+        return node
+        
+            
+
 
     def parseFactor():
        if Parser.tokens.next.type == "int":
@@ -513,14 +616,17 @@ class Parser:
             Parser.tokens.selectNext()
             if Parser.tokens.next.type == "ENTER":
                 Parser.tokens.selectNext()
-                root = Parser.parseStatement()
             else:
                 raise ValueError("sem enter")
-            if Parser.tokens.next.type == "CLOSE_BRACES":
+            children_list = []  
+            while Parser.tokens.next.type != "CLOSE_BRACES" and Parser.tokens.next.type != "EOF":
+                children_list.append(Parser.parseStatement())
+            if Parser.tokens.next.type != "EOF":
                 Parser.tokens.selectNext()
-                return root
+                return Block(children = children_list)
             else:
-                raise ValueError("sem chaves fechadas")
+                raise ValueError("sem enter")
+
         else: 
             raise ValueError("sem chaves abertas")
 
@@ -547,6 +653,34 @@ class Parser:
                 raise ValueError
         return node
     
+    def parseAssignment(self):
+        node_id = Parser.tokens.next.value
+        Parser.tokens.selectNext()
+        if Parser.tokens.next.type == "OPEN_PAREN":
+            args = []
+            Parser.tokens.selectNext()
+            while Parser.tokens.next.type != "CLOSE_PAREN":
+                node_teste = Parser.parserBoolExpression()
+
+                if(Parser.tokens.next.type != "COMMA" and Parser.tokens.next.type != "CLOSE_PAREN"):
+                    raise ValueError("Invalid string")
+                args.append(node_teste)
+
+                if Parser.tokens.next.type == "COMMA":
+                    Parser.tokens.selectNext()
+            node = FuncCall(name=node_id, children=args)
+            Parser.tokens.selectNext()
+
+        elif Parser.tokens.next.type == "EQUAL":
+            Parser.tokens.selectNext()
+            node = Assignment(children=[node_id, Parser.parserBoolExpression()])
+        else : 
+            raise ValueError("parseAssignment error")
+
+        return node
+
+        
+
     
     def parseStatement():
         root = NoOp()
@@ -604,6 +738,10 @@ class Parser:
 
             else:
                 root = VarDec(tipo_var, [raiz_var])
+
+        elif Parser.tokens.next.type == "return":
+            Parser.tokens.selectNext()
+            root = ReturnNode(value=[Parser.parserBoolExpression()])
 
         elif Parser.tokens.next.type == "for":
             Parser.tokens.selectNext()
