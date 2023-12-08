@@ -1,7 +1,6 @@
 import sys
 import re
 from SymbolTable import SymbolTable
-from ASM import *
 from abc import ABC, abstractmethod
 
 
@@ -28,7 +27,7 @@ class Node:
         self.children = children
         
     @abstractmethod
-    def Evaluate(self, table: SymbolTable, assembly: Writer):
+    def Evaluate(self, table: SymbolTable):
         pass
 
 
@@ -36,98 +35,69 @@ class Node:
 class BinOp(Node):
     def __init__(self, value, children):
         super().__init__(value, children)
-    def Evaluate(self, table : SymbolTable,assembly: Writer):
+    def Evaluate(self, table : SymbolTable):
     
-        children_1 = self.children[1].Evaluate(table, assembly)
-        assembly.write(f"PUSH EAX ; O BinOp recupera o valor da pilha em EAX\n")
-        
-        children_2 = self.children[0].Evaluate(table, assembly)
-        assembly.write(f"POP EBX; O BinOp guarda o resultado na pilha\n")
+        children_1 = self.children[0].Evaluate(table)
+        children_2 = self.children[1].Evaluate(table)
 
         if self.value == ".":
             return (str(children_1[0]) + str(children_2[0]), "string")
 
-        # elif  children_1[1] == "string" and  children_2[1]== "string":
-        #     if self.value == "==":
-        #         return (int(children_1[0] == children_2[0]), "int")
-        #     elif self.value == "!=":
-        #         return (int(children_1[0] != children_2[0]), "int")
-        #     elif self.value == ">":
-        #         return (int(children_1[0] > children_2[0]), "int")
-        #     elif self.value == "<":
-        #         return (int(children_1[0] < children_2[0]), "int")
-        #     elif self.value == ">=":
-        #         return (int(children_1[0] >= children_2[0]), "int")
-        #     elif self.value == "<=":
-        #         return (int(children_1[0] <= children_2[0]), "int")
+        elif  children_1[1] == "string" and  children_2[1]== "string":
+            if self.value == "==":
+                return (int(children_1[0] == children_2[0]), "int")
+            elif self.value == "!=":
+                return (int(children_1[0] != children_2[0]), "int")
+            elif self.value == ">":
+                return (int(children_1[0] > children_2[0]), "int")
+            elif self.value == "<":
+                return (int(children_1[0] < children_2[0]), "int")
+            elif self.value == ">=":
+                return (int(children_1[0] >= children_2[0]), "int")
+            elif self.value == "<=":
+                return (int(children_1[0] <= children_2[0]), "int")
             
-        # elif children_1[1] == "int" and  children_2[1] == "int":
-        #     if self.value == "==":
-        #         return (int(children_1[0] == children_2[0]), "int")
-        #     elif self.value == "!=":
-        #         return (int(children_1[0] != children_2[0]), "int")
-        #     elif self.value == ">":
-        #         return (int(children_1[0] > children_2[0]), "int")
-        #     elif self.value == "<":
-        #         return (int(children_1[0] < children_2[0]), "int")
-        #     elif self.value == ">=":
-        #         return (int(children_1[0] >= children_2[0]), "int")
-        #     elif self.value == "<=":
-        #         return (int(children_1[0] <= children_2[0]), "int")
-        #     elif self.value == "+":
-        #         return(children_1[0] + children_2[0], "int")
-        #     elif self.value == "-":
-        #         return(children_1[0] - children_2[0], "int")
-        #     elif self.value == "*":
-        #         return(children_1[0] * children_2[0], "int")
-        #     elif self.value == "/":
-        #         return(children_1[0] // children_2[0], "int")
-        #     elif self.value == "==":
-        #         return(int(children_1[0] == children_2[0]), "int")
-        #     elif self.value == "AND":
-        #         return(int(children_1[0] and children_2[0]), "int")
-        #     elif self.value == "OR":
-        #         return(int(children_1[0] or children_2[0]), "int")
-        #     elif self.value == "!=":
-        #         return(int(children_1[0] != children_2[0]), "int")
-
-        if self.value == "==":
-            assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
-            assembly.write(f"CALL binop_je\n")
-
-        elif self.value == ">":
-            assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
-            assembly.write(f"CALL binop_jg\n")
-        elif self.value == "<":
-            assembly.write(f"CMP EAX, EBX ; O BinOp executa a operacao correspondente\n")
-            assembly.write(f"CALL binop_jl\n")
-
-        elif self.value == "+": 
-            assembly.write(f"ADD EAX, EBX\n")
-
-        elif self.value == "-":
-            assembly.write(f"SUB EAX, EBX\n")
-
-        elif self.value == "*":
-            assembly.write(f"IMUL EBX\n")
-        elif self.value == "/":
-            assembly.write(f"IDIV EBX\n")
-        elif self.value == "AND":
-            assembly.write(f"AND EAX, EBX\n")
-        elif self.value == "OR":
-            assembly.write(f"OR EAX, EBX\n")
+        elif children_1[1] == "int" and  children_2[1] == "int":
+            if self.value == "==":
+                return (int(children_1[0] == children_2[0]), "int")
+            elif self.value == "!=":
+                return (int(children_1[0] != children_2[0]), "int")
+            elif self.value == ">":
+                return (int(children_1[0] > children_2[0]), "int")
+            elif self.value == "<":
+                return (int(children_1[0] < children_2[0]), "int")
+            elif self.value == ">=":
+                return (int(children_1[0] >= children_2[0]), "int")
+            elif self.value == "<=":
+                return (int(children_1[0] <= children_2[0]), "int")
+            elif self.value == "+":
+                return(children_1[0] + children_2[0], "int")
+            elif self.value == "-":
+                return(children_1[0] - children_2[0], "int")
+            elif self.value == "*":
+                return(children_1[0] * children_2[0], "int")
+            elif self.value == "/":
+                return(children_1[0] // children_2[0], "int")
+            elif self.value == "==":
+                return(int(children_1[0] == children_2[0]), "int")
+            elif self.value == "AND":
+                return(int(children_1[0] and children_2[0]), "int")
+            elif self.value == "OR":
+                return(int(children_1[0] or children_2[0]), "int")
+            elif self.value == "!=":
+                return(int(children_1[0] != children_2[0]), "int")
             
         else: 
             raise ValueError("BinOP Value error")
         
 class UnOp(Node):
-    def Evaluate(self, table : SymbolTable,assembly: Writer):
+    def Evaluate(self, table : SymbolTable):
         if self.value == "+":
-            assembly.write(f"MOV EAX, EAX ; O UnOp executa a operacao correspondente\n")
+            return (self.children[0].Evaluate(table)[0], "int")
         elif self.value == "-":
-            assembly.write(f"NEG EAX ; O UnOp executa a operacao correspondente\n")
+            return (-self.children[0].Evaluate(table)[0], "int")
         elif self.value == "!":
-            assembly.write(f"NOT EAX ; O UnOp executa a operacao correspondente\n")
+            return (not(self.children[0].Evaluate(table))[0], "int")
         else: 
             raise ValueError("UnOP Value error")
         
@@ -135,64 +105,55 @@ class UnOp(Node):
 class IntVal(Node):
     def __init__(self, value, children=[]):
         super().__init__(value, children)
-    def Evaluate(self,table : SymbolTable, assembly: Writer):
-        assembly.write(f"MOV EAX, {self.value} ; O IntVal carrega o valor {self.value} em EAX\n")
+    def Evaluate(self,table : SymbolTable):
+        return (self.value, "int")
     
 class String(Node):
     def __init__(self, value, children=None):
         super().__init__(value, children)
 
-    def Evaluate(self, table : SymbolTable, assembly: Writer):
+    def Evaluate(self, table : SymbolTable):
         return (self.value, "string")
     
 class VarDec(Node):
     def __init__(self, value, children):
         super().__init__(value, children)
-    def Evaluate(self, table : SymbolTable, assembly: Writer):
-        assembly.write(f"PUSH DWORD 0\n")
-        pteste = (len(table.table)+1)*4
+    def Evaluate(self, table : SymbolTable):
         if len(self.children) == 2:
-            value = self.children[1].Evaluate(table, assembly)
-            table.create(variable = self.children[0], value = value, type = self.value, position = pteste)
-            assembly.write(f"MOV DWORD [EBP-{pteste}], EAX ;")
+            table.create(variable = self.children[0], value = self.children[1].Evaluate(table), type = self.value)
         elif len(self.children) == 1:
-            table.create(variable = self.children[0], value = None, type = self.value, position = pteste)
+            table.create(variable = self.children[0], value = None, type = self.value)
 
 class NoOp(Node):
     def __init__(self):
         super().__init__(value=None, children=[]) 
-    def Evaluate(self,table : SymbolTable, assembly: Writer):
-        return(None,None)
-    
+    def Evaluate(self,table : SymbolTable):
+        pass
+
 class Identifier(Node):
-    def __init__(self, value):
+  def __init__(self, value):
         super().__init__(value, children=None)
-
-    def Evaluate(self, table : SymbolTable, assembly: Writer):
-        value = table.getter(self.value)["value"]
-        position = table.getter(self.value)["position"]
-        assembly.write(f"MOV EAX, [EBP-{position}] ; Evaluate do Iden {value}")
-        return value
-
+  def Evaluate(self, table : SymbolTable):
+    return table.getter(self.value)["value"]
 
 class Assignment(Node):
     def __init__(self, children, value=None):
         super().__init__(value, children)
 
-    def Evaluate(self, table : SymbolTable, assembly: Writer):
+    def Evaluate(self, table : SymbolTable):
+        value = self.children[1].Evaluate(table)
         variable = table.getter(self.children[0])
-        self.children[1].Evaluate(table, assembly)
-        assembly.write(f"MOV [EBP-{variable['position']}], EAX ;")
+
+        if  value[1] != variable["type"]:
+            raise ValueError("Type variable incorrect")
+        
+        table.setter(self.children[0], value)
         
 class Scanln(Node):
     def __init__(self, children = None, value=None):
         super().__init__(value, children)
-    def Evaluate(self, table : SymbolTable, assembly: Writer):
-        assembly.write(f"PUSH scanint ;")
-        assembly.write(f"PUSH formatin ;")
-        assembly.write(f"CALL scanf ;")
-        assembly.write(f"ADD ESP, 8 ;")
-        assembly.write(f"MOV EAX, DWORD [scanint] ;")
+    def Evaluate(self, table : SymbolTable):
+        return (int(input()), "int")
     
 
 class Println(Node):
@@ -200,52 +161,37 @@ class Println(Node):
     def __init__(self, children, value = None):
         super().__init__(value, children)
 
-    def Evaluate(self, table : SymbolTable, assembly: Writer):
-        self.children[0].Evaluate(table, assembly)
-        assembly.write(f"PUSH EAX ;")
-        assembly.write(f"PUSH formatout ;")
-        assembly.write(f"CALL printf ;")
-        assembly.write(f"ADD ESP, 8 ;")
+    def Evaluate(self, table : SymbolTable):
+        print(self.children[0].Evaluate(table)[0])
 
 class For(Node):
     def __init__(self, children, value=None):
         super().__init__(value, children)
 
-    def Evaluate(self, table : SymbolTable, assembly: Writer):
-        
-        assembly.write(f"LOOP_{assembly.id}: ;")
-        self.children[1].Evaluate(table, assembly)
-        assembly.write(f"CMP EAX, False ;")
-        assembly.write(f"JE EXIT_{assembly.id} ;")
-        self.children[2].Evaluate(table, assembly)
-        self.children[3].Evaluate(table, assembly)
-        assembly.write(f"JMP LOOP_{assembly.id} ;")
-        assembly.write(f"EXIT_{assembly.id}: ;")
-        assembly.get_unique_id()
-
+    def Evaluate(self, table : SymbolTable):
+        self.children[0].Evaluate(table)
+        while self.children[1].Evaluate(table)[0]:
+            self.children[3].Evaluate(table)
+            self.children[2].Evaluate(table)
 
 class If(Node):
     def __init__(self, children, value=None):
         super().__init__(value, children)
         
-    def Evaluate(self, table : SymbolTable, assembly: Writer):
-        self.children[0].Evaluate(table, assembly) 
-        assembly.write(f"CMP EAX, False ;")
-        assembly.write(f"JE EXIT_{assembly.id} ;")
-        self.children[1].Evaluate(table, assembly)
-        assembly.write(f"EXIT_{assembly.id}: \n")
-        assembly.get_unique_id()
-        if len(self.children) >2:
-            self.children[2].Evaluate(table, assembly)
-
+    def Evaluate(self, table : SymbolTable):
+        if self.children[0].Evaluate(table):
+            self.children[1].Evaluate(table)
+        elif len(self.children) > 2:
+            self.children[2].Evaluate(table)
 
 class Block(Node):
   def __init__(self, children, value=None):
         super().__init__(value, children)
-  def Evaluate(self, table : SymbolTable, assembly: Writer):
+  def Evaluate(self, table : SymbolTable):
     for child in self.children:
-      child.Evaluate(table, assembly)
+      child.Evaluate(table)
         
+
 # Parte de cima será o node.py
     
 class Tokenizer:
@@ -567,17 +513,14 @@ class Parser:
             Parser.tokens.selectNext()
             if Parser.tokens.next.type == "ENTER":
                 Parser.tokens.selectNext()
+                root = Parser.parseStatement()
             else:
                 raise ValueError("sem enter")
-            children_list = []  
-            while Parser.tokens.next.type != "CLOSE_BRACES" and Parser.tokens.next.type != "EOF":
-                children_list.append(Parser.parseStatement())
-            if Parser.tokens.next.type != "EOF":
+            if Parser.tokens.next.type == "CLOSE_BRACES":
                 Parser.tokens.selectNext()
-                return Block(children = children_list)
+                return root
             else:
-                raise ValueError("sem enter")
-
+                raise ValueError("sem chaves fechadas")
         else: 
             raise ValueError("sem chaves abertas")
 
@@ -703,7 +646,7 @@ class Parser:
         raise ValueError("Statement quebrou")
             
 
-    def run(arquivo, assembly):
+    def run(arquivo):
         expressao_semcoment = PrePro(arquivo).filter()
         table = SymbolTable()
 
@@ -711,15 +654,13 @@ class Parser:
         Parser.tokens.selectNext()
 
         for root in Parser.parseProgram():
-            root.Evaluate(table, assembly)
+            root.Evaluate(table)
 
 
 
-arquivo = sys.argv[1]
-arquivo_nome = arquivo.replace(".go", "")   
-assembly = Writer(f"{arquivo_nome}.asm")
-with open(arquivo, "r") as expressao:
-    code = expressao.read()
-Parser.run(code, assembly)  
-assembly.close_p()
+expressao = open(sys.argv[1], "r")
+code = expressao.read()
+expressao.close()
+teste = Parser.run(code)
+
 
