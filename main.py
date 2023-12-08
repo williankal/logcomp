@@ -40,8 +40,6 @@ class BinOp(Node):
         children_1 = self.children[0].Evaluate(table)
         children_2 = self.children[1].Evaluate(table)
 
-        print(children_1, children_2)
-
         if self.value == ".":
             return (str(children_1[0]) + str(children_2[0]), "string")
         
@@ -149,7 +147,6 @@ class Assignment(Node):
     def Evaluate(self, table : SymbolTable):
         value = self.children[1].Evaluate(table)
         variable = table.getter(self.children[0])
-
         if  value[1] != variable["type"]:
             raise ValueError("Type variable incorrect")
         
@@ -207,7 +204,6 @@ class FuncCall(Node):
 
     def Evaluate(self, table : SymbolTable):
         node = FuncTable.get(name=self.value)["node"]
-        type = FuncTable.get(name=self.value)["type"]
         
         func_table =SymbolTable()
         if len(self.children) != len(node.children) -2:
@@ -229,8 +225,8 @@ class ReturnNode(Node):
         super().__init__(value, children)
 
 
-    def evaluate(self, table: SymbolTable):
-        return self.value.evaluate(table)
+    def Evaluate(self, table: SymbolTable):
+        return self.value.Evaluate(table)
     
 class FuncTable:
     table2 = {}
