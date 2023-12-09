@@ -204,18 +204,23 @@ class FuncCall(Node):
 
     def Evaluate(self, table : SymbolTable):
         node = FuncTable.get(name=self.value)["node"]
-        
+        type1 = FuncTable.get(name=self.value)["type"]
+
         func_table =SymbolTable()
         if len(self.children) != len(node.children) -2:
             raise ValueError("Invalid number of arguments")
-        for i in range(len(self.children)):
+        i = 0
+        while i < len(self.children):
             var_type = self.children[i].Evaluate(table)
             var_id = node.children[i+1].children[0]
             if var_type[1] != node.children[i+1].value:
-                raise ValueError("Invalid type of arguments")
+                raise ValueError("Invalid type of arguments")   
             
             func_table.create(variable=var_id, value=var_type[0], type=var_type[1])
+            i+=1
         bloco = node.children[-1].Evaluate(func_table)
+        if bloco[1] != type1 and self.value != "main":
+            raise ValueError("No main")
         return bloco
         
 
