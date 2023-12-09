@@ -219,6 +219,8 @@ class FuncCall(Node):
             func_table.create(variable=var_id, value=var_type[0], type=var_type[1])
             i+=1
         bloco = node.children[-1].Evaluate(func_table)
+        if bloco[1] != type1:
+            raise ValueError("fun type error")
         if bloco[1] != type1 and self.value != "main":
             raise ValueError("No main")
         return bloco

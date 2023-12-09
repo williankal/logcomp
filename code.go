@@ -1,5 +1,4 @@
-// File sem main
-
-var y int = 1
-
-Println(y)
+// Type diferente
+func main() int {
+    return "b"
+}
